@@ -262,6 +262,7 @@ public:
     // logical updates use NativeSimulationClock and output uses the backend.
     virtual bool WaitForSourceRefresh(std::uint32_t frameStart);
     virtual int32_t ReadInput(int32_t port,JoystickControls& destination)=0;
+    virtual PortInputEdges TakePortInputEdges() {return {};}
     virtual void SetRumble(int32_t port,uint8_t small,uint8_t large)=0;
     virtual void SubmitFrame(EcstasyFrame& frame)=0;
     // Physical renderer observations only. CPU-only hosts expose no GPU
@@ -393,7 +394,7 @@ public:
     void InitializeFrontend(void (*ready)(MainMenuScreenServices&, const void*) = nullptr,
         const void* context = nullptr, const FrontendMenuExtension* extension = nullptr,
         const FrontendCreditsContent* credits = nullptr, const FrontendMenuExtension* optionsExtension = nullptr,
-        bool requireNamedProfile = false);
+        bool requireNamedProfile = false, const FrontendMenuExtension* controlsExtension = nullptr);
     FrontendStateView FrontendState() const;
     void BindSubtitleSetting(bool (*setting)(void*,int),void* context);
     const ::SpeechCaptionState& SpeechCaption() const noexcept;

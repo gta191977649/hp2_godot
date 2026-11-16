@@ -289,8 +289,8 @@ for the CARFX_EXHAUST_SMOKE slot. Tailpipe smoke uses list 10 and source
 engine/throttle state with a separate cosmetic Godot emitter and original
 SMOKE_CS artwork. The exhaust rate and lifetime are port-side values.
 The Debug ELF SHA-256 is the same as in the police support record above.
-Set `racer_nitro=1` in the profile's NFSHP2_pc.ini to enable the existing
-opt-in. N sends the source input sequence through the Godot InputMap.
+In the Godot port, use Shift in Be the Cop. To check Nitro particles,
+run `tools/test_mvp_particle_routes.gd -- --race-event=ultimate-racer:5`.
 
 The billboard projected size uses the magnitude of the Forward+ projection
 Y coefficient. The signed coefficient could give a zero or negative size

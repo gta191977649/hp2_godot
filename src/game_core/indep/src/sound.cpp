@@ -14,6 +14,7 @@
 #include "indep/src/speech/SEDWedge.hpp"
 #include "DemoDisc.hpp"
 #include "Fred.hpp"
+#include "Language.hpp"
 #include "NativeAudioProfileValidation.hpp"
 #include "Flags.hpp"
 #include "Joylog.hpp"
@@ -1928,8 +1929,7 @@ WorldStreamAudioResult soundLoadLocalizedSpeech(WorldStreamAudio& stream,int32_t
         return stream.result=WORLD_STREAM_AUDIO_OK;
     // Exact final PAL table2B6228: Swedish uses English speech. Active demo
     // policy selects DemoDisk, not English and not a beta asset directory.
-    static constexpr const char* names[]={"English","French","German","Italian","Spanish","English"};
-    const char* selected=TheDemoDiscManager.ActivationWord()!=0 ? "DemoDisk" : names[language];
+    const char* selected=TheDemoDiscManager.ActivationWord()!=0 ? "DemoDisk" : hp2::LocalizedSpeechLanguageName(language);
     const std::string base=std::string("Sound\\Speech\\")+selected;
     const auto header=base+"HDR.pck";
     const auto banks=base+"BAN.pck";

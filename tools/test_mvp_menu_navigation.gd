@@ -3,6 +3,7 @@ extends "test_mvp_debug_menu.gd"
 const UPPER_RAIL := 0xc671680c
 const LOWER_RAIL := 0x32c91dae
 var check_alignment := OS.get_environment("HP2_MVP_TEST_MENU_ALIGNMENT") == "1"
+var check_scroll := OS.get_environment("HP2_MVP_TEST_SCROLL") == "1"
 
 func select(id: int) -> void:
     for direction in [KEY_DOWN, KEY_UP]:
@@ -92,8 +93,33 @@ func round_trip(row: int, child: String, parent: String) -> void:
     await back(parent)
     print("MENU_BACK_PASS ", child, " -> ", parent)
 
+func check_movie_backdrop(page: String) -> void:
+    var canvas := race.get_node("FrontendCanvas") as Node2D
+    var players := canvas.find_children("*", "VideoStreamPlayer", true, false)
+    if players.size() != 1:
+        fail("missing video player on " + page)
+        return
+    var player := players[0] as VideoStreamPlayer
+    var panel := player.get_parent() as Control
+    var canvas_rect := Rect2(0.0, 0.0, 640.0, 480.0)
+    if not player.is_visible_in_tree() or not player.is_playing() or panel == null or not panel.clip_contents:
+        fail("no clipped video panel on " + page)
+        return
+    if not canvas_rect.encloses(panel.get_rect()) or panel.get_rect().encloses(canvas_rect.grow(-1.0)):
+        fail("video panel is not inset on %s: %s" % [page, panel.get_rect()])
+        return
+    if not player.get_global_rect().grow(1.0).encloses(panel.get_global_rect()):
+        fail("video does not fill its panel on " + page)
+        return
+    if absf(player.size.aspect() - 4.0 / 3.0) > 0.002:
+        fail("video aspect changed on " + page)
+        return
+    print("MENU_VIDEO_PASS ", page, " ", panel.get_rect())
+
 func run() -> void:
     deadline = Time.get_ticks_msec() + 105000
+    if check_scroll:
+        OS.set_environment("HP2_MVP_TEST_MENU_ALIGNMENT", "1")
     change_scene_to_file("res://native_game.tscn")
     while not is_instance_valid(race):
         await process_frame
@@ -118,14 +144,17 @@ func frontend_menus() -> void:
     await key(KEY_ENTER)
     await wait_screen(MAIN)
     await create_timer(1.0).timeout
+    check_movie_backdrop(MAIN)
     await key(KEY_ESCAPE)
     if race.telemetry().get("screen") != MAIN:
         fail("Escape changed the main menu")
         return
     await visit(0, "Cops On Mode Select")
+    check_movie_backdrop("Cops On Mode Select")
     await round_trip(1, "ChallengeBeACop", "Cops On Mode Select")
     await back(MAIN)
     await visit(1, "Cops Off Mode Select")
+    check_movie_backdrop("Cops Off Mode Select")
     await visit(1, "Challenge")
     await visit(3, "Single Race Setup")
     if check_alignment:
@@ -159,6 +188,8 @@ func frontend_menus() -> void:
     print("MENU_BACK_PASS View Event Tree details -> tree -> Cops Off Mode Select")
     await back(MAIN)
     await visit(2, "Options")
+    check_movie_backdrop("Options")
+    await capture("options-video")
     await visit(0, "Audio Options")
     await check_scrolling_menu(8)
     if check_alignment:
@@ -168,10 +199,27 @@ func frontend_menus() -> void:
         await key(KEY_DOWN)
         if race.telemetry().get("selected_item", 0) != 0xaee77884:
             fail("Audio Options moved past its last item")
-    await round_trip(8, "JukeBox Music", "Audio Options")
+    if check_scroll:
+        await select(FIRST + 6)
+        await check_smooth_row(KEY_DOWN, FIRST + 3)
+    await visit(8, "JukeBox Music")
+    if check_scroll:
+        for row in range(5):
+            await key(KEY_DOWN)
+        await check_smooth_row(KEY_DOWN, 0x3167afba) # HP2_PLAYLIST_2_0
+        await capture("scrolled-jukebox")
+    await back("Audio Options")
+    print("MENU_BACK_PASS JukeBox Music -> Audio Options")
     await back("Options")
-    await visit(1, "Joystick PreConfig")
+    await visit(1, "Controls")
+    await key(KEY_DOWN)
+    await key(KEY_ENTER)
+    await wait_screen("Controller Settings")
+    await key(KEY_ENTER)
+    await wait_screen("Joystick PreConfig")
     await round_trip(0, "Joystick Config Port1", "Joystick PreConfig")
+    await back("Controller Settings")
+    await back("Controls")
     await back("Options")
     await visit(2, "Display Options")
     await check_scrolling_menu(8)

@@ -29,6 +29,12 @@ func pad(button: JoyButton) -> void:
     await input_tap(event)
 
 func run() -> void:
+    const arrows_by_context := {
+        &"hp2_menu_up": &"hp2_accelerate",
+        &"hp2_menu_down": &"hp2_brake",
+        &"hp2_menu_left": &"hp2_steer_left",
+        &"hp2_menu_right": &"hp2_steer_right",
+    }
     var keyboard_actions := {}
     for action in InputMap.get_actions():
         if not String(action).begins_with("hp2_"):
@@ -37,8 +43,11 @@ func run() -> void:
             if binding is InputEventKey:
                 var code: Key = binding.physical_keycode if binding.physical_keycode else binding.keycode
                 if keyboard_actions.has(code):
-                    fail("Duplicate key binding in %s and %s" % [keyboard_actions[code], action])
-                    return
+                    var first: StringName = keyboard_actions[code]
+                    if arrows_by_context.get(first) != action and arrows_by_context.get(action) != first:
+                        fail("Duplicate key binding in %s and %s" % [first, action])
+                        return
+                    continue
                 keyboard_actions[code] = action
     OS.set_environment("HP2_MVP_MOUSE_REPLAY", "1")
     if not keyboard:

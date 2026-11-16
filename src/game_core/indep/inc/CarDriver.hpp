@@ -20,6 +20,7 @@ typedef struct JoystickControls {
     uint8_t sticks[4];             /* Right X/Y, left X/Y; centre 128. */
     uint8_t pressures[12];         /* Authored pressure-channel order. */
     int32_t mappingProfile;        /* Authored scanner profile, or -1. */
+    int32_t portConfiguration;    /* Port-side per-sample override. Zero uses the saved layout. */
 } JoystickControls;
 
 typedef struct JoystickSample {
@@ -336,6 +337,7 @@ typedef struct GameInputPortScanner {
     int32_t currentType;
     int32_t pendingType;
     int32_t stableSamples;
+    int32_t portConfiguration;
     GameInputCalibration calibration[4];
 } GameInputPortScanner;
 
@@ -451,15 +453,25 @@ uint8_t joystickGetDeadzone(const GameInputRouter* router,int32_t port,int32_t a
 #endif
 
 #ifdef __cplusplus
+#include <array>
 struct JoystickSystem;
 struct ReplayIntegerLog;
 struct ReplayManager;
 struct GameTime;
 class DemoDiscManager;
+// Port-side keyboard shortcuts for the original input callbacks on port zero.
+inline constexpr uint8_t kChangeCameraInput = 0x5d;
+inline constexpr uint8_t kZoneFreezeInput = 0x5f;
+inline constexpr uint8_t kZoneZoomInput = 0x60;
+inline constexpr uint8_t kNitroInput = 0x7f;
+inline constexpr uint8_t kRoadblockInput = 0x80;
+inline constexpr uint8_t kHelicopterInput = 0x81;
+using PortInputEdges = std::array<uint8_t, 6>;
 // Full released GenerateJoyEvents: physical samples -> source scanners ->
 // Joylog channel1 -> Replay channel0 -> retained typed callback queue.
 GameInputResult joystickGenerateEvents(GameInputRouter& input,JoystickSystem& samples,
-    ReplayIntegerLog& log,ReplayManager* replay,const GameTime& clock,DemoDiscManager& demo);
+    ReplayIntegerLog& log,ReplayManager* replay,const GameTime& clock,DemoDiscManager& demo,
+    PortInputEdges portEdges = {});
 #endif
 
 

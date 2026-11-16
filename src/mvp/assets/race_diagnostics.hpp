@@ -2,7 +2,7 @@
 #include <cstdint>
 
 struct WorldSimulation;
-namespace godot { class Dictionary; class PackedVector3Array; }
+namespace godot { class Dictionary; class PackedVector3Array; class String; }
 
 namespace hp2 {
 
@@ -36,6 +36,8 @@ bool test_scenery_camera_enabled();
 void collect_police_diagnostics(godot::Dictionary& result, const RaceStateView& race,
     const FrontendStateView& frontend);
 void collect_menu_alignment_diagnostics(godot::Dictionary& result, const FrontendStateView& frontend);
+void collect_controls_diagnostics(godot::Dictionary& result, const RaceStateView& race,
+    const FrontendStateView& frontend, const godot::String& device);
 void collect_replay_diagnostics(godot::Dictionary& result, const RaceStateView& race,
     const FrontendStateView& frontend);
 

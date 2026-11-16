@@ -25,6 +25,7 @@ struct FlailerFrontendInput {
 #include <cstdint>
 #include <exception>
 #include <memory>
+#include <string>
 
 class DemoDiscManager;
 struct ReplayIntegerLog;
@@ -307,6 +308,7 @@ struct FrontendMenuExtension {
     void (*service)(void*){};
     void* context{};
     FlailerScreenConfig* submenu{};
+    FlailerScreenConfig* secondarySubmenu{};
 };
 
 struct MainMenuScreenServices {
@@ -322,6 +324,7 @@ struct MainMenuScreenServices {
     // Port-side Display toggle. A negative action reads, zero disables, one enables.
     bool (*subtitleSetting)(void*,int){};
     void* subtitleContext{};
+    const FrontendMenuExtension* controlsExtension{};
 };
 // Actual source GP-C0FC main-menu screen lifetime. Bindings borrow existing
 // services; activation owns one concrete NewMainMenu, never a second FRED.
@@ -464,6 +467,9 @@ public:
     virtual void HandleHighlight(ScreenMessage message,ScreenCallbackData& data,std::uint32_t group);
     void FirstCrackAtMessage(ScreenMessage message,ScreenCallbackData& data);
     static void BaseCallback(ScreenMessage message,ScreenCallbackData* data);
+    // Port-side reuse of the original Options rail placement for new rows.
+    static void PositionHighlightBars(FlailerUiState& ui,std::uint32_t screen,
+        std::uint32_t group,float rowOffset=0.0f);
 protected:
     void SetMenuHighlight(ScreenCallbackData& data,std::uint32_t group,float rowOffset=0.0f);
     void PositionHighlightBars(std::uint32_t group,float rowOffset=0.0f);
@@ -482,6 +488,9 @@ public:
     static void Callback(ScreenMessage message,ScreenCallbackData* data);
 private:
     std::unique_ptr<FlailerAnimatedBlurb> blurb_;
+    FlailerTextChunk* portControlsLabel_{};
+    std::string originalControlsText_;
+    std::uint32_t originalControlsLanguage_{};
     std::int32_t rumbleTimer_{};
 };
 // Original joystickconfiguration.cpp screen owners and typed analog bridge.

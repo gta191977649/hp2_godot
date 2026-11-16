@@ -2,12 +2,14 @@
 #include "FEAnim.hpp"
 #include "subtitle_menu_row.hpp"
 #include "Fred.hpp"
+#include "Language.hpp"
 #include "NativeAudioProfileValidation.hpp"
 #include "CarLoader.hpp"
 #include "Timer.hpp"
 #include "Flags.hpp"
 #include <tuple>
 #include <optional>
+#include <cmath>
 #include "bware/inc/bWare.hpp"
 #include "bware/inc/bMath.hpp"
 
@@ -174,14 +176,19 @@ void OptionsScreenBase::SetMenuHighlight(ScreenCallbackData& data,std::uint32_t 
 
 void OptionsScreenBase::PositionHighlightBars(std::uint32_t group,float rowOffset)
 {
-    auto& ui=*state_->services.ui;
+    PositionHighlightBars(*state_->services.ui,state_->screen,group,rowOffset);
+}
+
+void OptionsScreenBase::PositionHighlightBars(FlailerUiState& ui,std::uint32_t screen,
+    std::uint32_t group,float rowOffset)
+{
     std::int32_t left,top,right,bottom;
-    Require(ui.resources->GetBoundingBox(state_->screen,group,left,top,right,bottom,ui.language),
+    Require(ui.resources->GetBoundingBox(screen,group,left,top,right,bottom,ui.language),
         "Options highlight has no authored bounding rectangle");
     // The Options lower rail is at bottom, unlike the MainMenu/Cops -3.
-    if (auto* lower=ui.resources->FindObject(state_->screen,0x32c91daeu))
+    if (auto* lower=ui.resources->FindObject(screen,0x32c91daeu))
         lower->SetTopLeftY(static_cast<float>(bottom)+rowOffset);
-    if (auto* upper=ui.resources->FindObject(state_->screen,0xc671680cu))
+    if (auto* upper=ui.resources->FindObject(screen,0xc671680cu))
         upper->SetTopLeftY(static_cast<float>(top-6)+rowOffset);
 }
 
@@ -235,11 +242,6 @@ public:
         text_.ownedText.assign(65,0);
         text_.text=text_.ownedText.data();
         text_.SetString(services.optionsExtension->label);
-        const float start=display->object->topLeftY;
-        auto* last=resources.FindObject(screen,0x52e039f9u,1);
-        Require(last,"Options extension needs the authored last row");
-        const float step=(last->topLeftY-start)/5.0f;
-        text_.SetTopLeftY(start+step);
         auto* mask=resources.FindObject(screen,Mask,2);
         if (!mask) {
             mask_.emplace(static_cast<const FlailerBitmapChunk&>(*displayMask));
@@ -253,18 +255,8 @@ public:
         } else {
             Save(*mask);
         }
-        mask->SetTopLeftY(displayMask->topLeftY+step);
         if(text_.clipObjectKey==displayMask->key)text_.clipObjectKey=Mask;
-        for(std::uint32_t i=3;i<7;++i) {
-            auto* label=resources.FindObject(screen,0x52e039f3u+i,1);
-            auto* railMask=resources.FindObject(screen,OptionsGroups[i],2);
-            Require(label && railMask,"Options extension needs all authored row positions");
-            const float delta=start+step*static_cast<float>(i-1)-label->topLeftY;
-            Save(*label);
-            Save(*railMask);
-            label->SetTopLeftY(label->topLeftY+delta);
-            railMask->SetTopLeftY(railMask->topLeftY+delta);
-        }
+        text_.SetTopLeftY(mask->topLeftY + display->object->topLeftY - displayMask->topLeftY);
         Append(text_);
         ++art_.textCount;
         item_.object=&text_;
@@ -273,6 +265,7 @@ public:
         item_.next=display->next;
         display->next->previous=&item_;
         display->next=&item_;
+        Layout(resources,screen);
     }
 
     ~PortRow()
@@ -283,11 +276,51 @@ public:
             item_.next->previous=item_.previous;
         }
         for(const auto& [object,y]:positions_)object->SetTopLeftY(y);
+        for(const auto& [mask,scale]:maskScales_)mask->SetScaleY(scale);
+        for(const auto& [object,visible]:visibility_)object->visible=visible;
         Remove(text_);
         --art_.textCount;
         if(mask_) {Remove(*mask_);--art_.bitmapCount;}
     }
 private:
+    void Layout(FlailerResources& resources,std::uint32_t screen)
+    {
+        std::vector<std::pair<FlailerObjectChunk*,FlailerBitmapChunk*>> rows;
+        for(auto* item=menu_.root.next;item!=&menu_.root;item=item->next) {
+            if (!item->object || item->objectKey<0x52e039f3u || item->objectKey>Key) continue;
+            const auto key=item->objectKey==Key ? Mask : OptionsGroups[item->objectKey-0x52e039f3u];
+            auto* mask=static_cast<FlailerBitmapChunk*>(resources.FindObject(screen,key,2));
+            Require(mask,"Options row has no authored mask");
+            if (item->flags&1u) rows.emplace_back(item->object,mask);
+            else {
+                visibility_.emplace_back(mask,mask->visible);
+                mask->visible=0;
+                mask->DeleteFlailerStrip();
+            }
+        }
+        Require(rows.size()>1,"Options needs consecutive authored rows");
+        const float start=rows.front().second->topLeftY;
+        const float height=resources.ScaledBitmapHeight(*rows.front().second);
+        const float authoredPitch=rows[1].second->topLeftY-start;
+        // The movie ends at y=341 in the authored Options canvas.
+        const float pitch=std::min(authoredPitch,std::floor((341.0f-start-height)/(rows.size()-1)));
+        for(std::size_t i=0;i<rows.size();++i) {
+            const auto& [label,mask]=rows[i];
+            const float y=start+pitch*i;
+            Save(*label);
+            Save(*mask);
+            maskScales_.emplace_back(mask,mask->scaleY);
+            label->SetTopLeftY(label->topLeftY+y-mask->topLeftY);
+            mask->SetTopLeftY(y);
+            mask->SetHeight(resources,height);
+        }
+        for(auto* object=art_.objects.next;object!=&art_.objects;object=object->next) {
+            if(object->key!=0xaa5d7d3fu)continue; // Authored fixed gaps precede the new row layout.
+            visibility_.emplace_back(object,object->visible);
+            object->visible=0;
+            object->DeleteFlailerStrip();
+        }
+    }
     void Save(FlailerObjectChunk& object) {positions_.emplace_back(&object,object.topLeftY);}
     void Append(FlailerObjectChunk& object)
     {
@@ -310,21 +343,34 @@ private:
     FlailerTextChunk text_;
     std::optional<FlailerBitmapChunk> mask_;
     std::vector<std::pair<FlailerObjectChunk*,float>> positions_;
+    std::vector<std::pair<FlailerBitmapChunk*,float>> maskScales_;
+    std::vector<std::pair<FlailerObjectChunk*,std::uint8_t>> visibility_;
 };
 
 OptionsScreen::OptionsScreen(MainMenuScreenServices& services,std::uint32_t screen)
     : OptionsScreenBase(services,screen),
       blurb_(std::make_unique<FlailerAnimatedBlurb>(*services.ui,screen,0x75980cf0u,0x75980cf0u,0x70a404ecu))
 {
-    if(services.optionsExtension) {
-        portRow_=std::make_unique<PortRow>(services,screen);
-        if(!state_->selection->items[7])
-            state_->selection->AddItem(services.ui->resources->FindObject(screen,PortRow::Mask));
+    if (services.controlsExtension) {
+        // The host's combined page replaces the authored Controller entry.
+        auto* label=static_cast<FlailerTextChunk*>(services.ui->resources->FindObject(screen,0x52e039f4u,1));
+        Require(label && label->text,"Options Controls row needs its authored label");
+        originalControlsText_=label->text;
+        originalControlsLanguage_=label->languageId;
+        label->SetString(services.controlsExtension->label);
+        portControlsLabel_=label;
     }
     // PAL1EEB78 initializes only the embedded RumbleTimer word. Its Tick
     // and TriggerSomething callees are final JR RA/NOP and are not emitted.
     rumbleTimer_=0;
-    if (gameTimeGetVideoMode(services.ui->clock)==1) {
+    bool hideLanguages=gameTimeGetVideoMode(services.ui->clock)==1;
+    if(services.ui->externalPresentation) {
+        int available=0;
+        for(int language=0;language<6;++language)
+            if(services.ui->language->CanSelect(language))++available;
+        hideLanguages=available<2;
+    }
+    if (hideLanguages) {
         // Complete relevant constant-state2 path of actual16D198: find the
         // registered screen/menu/item, clear enabled bit1 and hide its object.
         // No replacement menu or generic callback is created for this call.
@@ -336,8 +382,18 @@ OptionsScreen::OptionsScreen(MainMenuScreenServices& services,std::uint32_t scre
                         services.ui->resources->SetObjectVisibility(screen,0x52e039f9u,0);
                     }
     }
+    if(services.optionsExtension) {
+        portRow_=std::make_unique<PortRow>(services,screen);
+        if(!state_->selection->items[7])
+            state_->selection->AddItem(services.ui->resources->FindObject(screen,PortRow::Mask));
+    }
 }
-OptionsScreen::~OptionsScreen()=default;
+OptionsScreen::~OptionsScreen()
+{
+    if (!portControlsLabel_) return;
+    portControlsLabel_->SetString(originalControlsText_.c_str());
+    portControlsLabel_->SetLanguageID(originalControlsLanguage_);
+}
 
 void OptionsScreen::HandleHighlight(ScreenMessage message,ScreenCallbackData& data,std::uint32_t group)
 {
@@ -351,7 +407,8 @@ void OptionsScreen::HandleEvent(ScreenMessage message,ScreenCallbackData& data)
         const char* destination=""; // actual PAL331660 default for unknown key
         switch (data.key) {
         case 0x52e039f3u:destination="Audio Options";break;
-        case 0x52e039f4u:destination="Joystick PreConfig";break;
+        case 0x52e039f4u:destination=state.services.controlsExtension
+            ?state.services.controlsExtension->screen->name:"Joystick PreConfig";break;
         case 0x52e039f5u:
             destination="Display Options";
             gDisplayOptionsChangeManager.Start(*state.services.frontend);
@@ -543,9 +600,18 @@ public:
         // actually prevents navigation to the invalid debug-only callback.
         if(auto* node=services.screens->active) {
             for(auto* current=node->screenRoot.next;current!=&node->screenRoot;current=current->next)
-                if(current->menu)
+                if(current->menu) {
                     if(auto* item=current->menu->FindItem(0x52e039f9u))
                         item->ClearMenuItemState(1);
+                    if(services.ui->externalPresentation) {
+                        for(int language=0;language<6;++language) {
+                            if(services.ui->language->CanSelect(language))continue;
+                            const auto key=0x52e039f3u+language;
+                            if(auto* item=current->menu->FindItem(key))item->ClearMenuItemState(1);
+                            services.ui->resources->SetObjectVisibility(screen,key,0);
+                        }
+                    }
+                }
         }
         services.ui->resources->SetObjectVisibility(screen,0x52e039f9u,0);
     }
@@ -556,17 +622,15 @@ public:
             if(services_.ui->language->currentLanguage==-1)return;
             auto* active=services_.screens->active;
             const auto choice=active?active->GetActiveMenuItem():0;
-            if(choice>=0x52e039f3u && choice<=0x52e039f8u) {
-                selected_=static_cast<std::int32_t>(choice-0x52e039f3u);CommitLanguage();
-            }
-            Require(services_.screens->MoveToPreviousScreen(1,false,data.joystickPort),
-                "Language options have no preceding original screen");return;
+            Close(choice,data.joystickPort);
+            return;
         }
         if(message!=ScreenMessage::Select)return;
         if(data.key>=0x52e039f3u && data.key<=0x52e039f8u) {
-            selected_=static_cast<std::int32_t>(data.key-0x52e039f3u);CommitLanguage();
-            Require(services_.screens->MoveToPreviousScreen(1,false,data.joystickPort),
-                "Committed language has no preceding original screen");return;
+            if(services_.ui->externalPresentation && !services_.ui->language->CanSelect(
+                static_cast<std::int32_t>(data.key-0x52e039f3u)))return;
+            Close(data.key,data.joystickPort);
+            return;
         }
         if(data.key==0x52e039f9u) {
             // A synthetic selection event must not reactivate the debug-only
@@ -576,6 +640,19 @@ public:
         }
     }
 private:
+    void Close(std::uint32_t key,std::int32_t port) {
+        const auto previous=services_.ui->language->currentLanguage;
+        if(key>=0x52e039f3u && key<=0x52e039f8u) {
+            selected_=static_cast<std::int32_t>(key-0x52e039f3u);
+            if(!services_.ui->externalPresentation || services_.ui->language->CanSelect(selected_))CommitLanguage();
+        }
+        const bool autosave=!preFrontend_ && services_.ui->externalPresentation && services_.frontend->autoSave &&
+            services_.ui->language->currentLanguage!=previous;
+        auto* screens=services_.screens;
+        Require(screens->MoveToPreviousScreen(1,false,port),"Language options have no preceding original screen");
+        if(autosave)(void)RequestProfileAutosave([] {});
+    }
+
     void CommitLanguage() {
         services_.ui->language->SetLanguage(selected_);
         if(preFrontend_ && services_.ui->language->currentLanguage!=-1) {
@@ -602,6 +679,8 @@ void LanguageOptionsScreenCallback(ScreenMessage message,ScreenCallbackData* dat
         Require(node && node->configuration && node->configuration->name,"Language screen lacks its original configuration");
         const bool pre=!std::strcmp(node->configuration->name,"Language Options Pre FE");
         languageOptionsOwner=std::make_unique<LanguageOptionsScreenBase>(*optionsServices,data->key,pre);
+        if(optionsServices->ui->externalPresentation)
+            data->value=std::max(optionsServices->ui->language->currentLanguage,0)+1;
     } else if(message==ScreenMessage::ScreenDeactivate)languageOptionsOwner.reset();
     else {
         Require(languageOptionsOwner!=nullptr,"Language message arrived outside its actual screen lifetime");
@@ -917,6 +996,12 @@ class JukeBoxMusicScreen final:public OptionsScreenBase {
     std::int32_t previewTicks_{};
     bool previewPending_{},listFocus_{};
     std::int32_t topRow_{};
+    std::unique_ptr<FlailerListViewport> playlist_;
+    std::vector<std::array<FlailerTextChunk*,3>> playlistRows_;
+    std::array<float,3> playlistY_{};
+    struct PlaylistMarker {FlailerObjectChunk* object;float y;std::uint32_t clip;};
+    std::array<PlaylistMarker,2> playlistMarkers_{};
+    int playlistGenre_=-1;
     static constexpr std::array<std::uint32_t,5> Titles{{0x64a819c7u,0x64a819c8u,0x64a819c9u,0x64a819cau,0x64a819cbu}};
     static constexpr std::array<std::uint32_t,5> Artists{{0x03b57047u,0x03b57048u,0x03b57049u,0x03b5704au,0x03b5704bu}};
     static constexpr std::array<std::uint32_t,5> Statuses{{0x89fb635fu,0x8c508c00u,0x8ea5b4a1u,0x90fadd42u,0x935005e3u}};
@@ -968,6 +1053,60 @@ class JukeBoxMusicScreen final:public OptionsScreenBase {
         std::int32_t signedDifference;std::memcpy(&signedDifference,&difference,sizeof(signedDifference));
         return static_cast<float>(signedDifference)*0.0002500000118743628f;
     }
+    void PreparePlaylist()
+    {
+        auto& resources=*state_->services.ui->resources;
+        const auto screen=state_->screen;
+        auto* marker=static_cast<FlailerBitmapChunk*>(resources.FindObject(screen,FirstMarkers[0],2));
+        auto* second=resources.FindObject(screen,SecondMarkers[0]);
+        const auto top=resources.FindObject(screen,Titles[0],1)->topLeftY;
+        const auto pitch=resources.FindObject(screen,Titles[1],1)->topLeftY-top;
+        Require(marker && second && pitch>0.0f,"Jukebox scrolling requires the authored playlist rows");
+        playlist_=std::make_unique<FlailerListViewport>(resources,*resources.FindScreen(screen),*marker,
+            -4.0f,top-3.0f,648.0f,5.0f*pitch,pitch,5);
+        playlistMarkers_={{{marker,marker->topLeftY,marker->clipObjectKey},{second,second->topLeftY,second->clipObjectKey}}};
+        for(const auto& entry:playlistMarkers_)playlist_->Clip(*entry.object);
+        const std::array keys{Titles[0],Artists[0],Statuses[0]};
+        for(std::size_t column=0;column<keys.size();++column)
+            playlistY_[column]=resources.FindObject(screen,keys[column],1)->topLeftY;
+        int count=0;
+        for(int i=0;i<genres_.count;++i)count=std::max(count,static_cast<int>(genres_.genres[i].count));
+        playlistRows_.resize(static_cast<std::size_t>(count));
+        for(std::size_t row=0;row<playlistRows_.size();++row)for(std::size_t column=0;column<keys.size();++column) {
+            const auto& model=*static_cast<const FlailerTextChunk*>(resources.FindObject(screen,keys[column],1));
+            const auto key=hashString(("HP2_PLAYLIST_"+std::to_string(row)+"_"+std::to_string(column)).c_str());
+            playlistRows_[row][column]=&playlist_->CloneText(model,key);
+        }
+        for(std::size_t i=0;i<Titles.size();++i) {
+            for(const auto key:{Titles[i],Artists[i],Statuses[i]})resources.SetObjectVisibility(screen,key,0);
+            if(i)for(const auto key:{FirstMarkers[i],SecondMarkers[i]})resources.SetObjectVisibility(screen,key,0);
+        }
+    }
+    void PositionPlaylist()
+    {
+        for(std::size_t row=0;row<static_cast<std::size_t>(CurrentGenre().count);++row)
+            for(std::size_t column=0;column<playlistY_.size();++column)
+                playlistRows_[row][column]->SetTopLeftY(playlistY_[column]+playlist_->Displacement(row));
+        for(const auto& entry:playlistMarkers_)
+            entry.object->SetTopLeftY(entry.y+playlist_->Displacement(editing_.menuState[0]));
+    }
+    void StylePlaylistRow(const GenreMgr::Genre& genre,int number,bool enabled,
+        std::uint32_t title,std::uint32_t artist,std::uint32_t state)
+    {
+        auto& ui=*state_->services.ui;auto& resources=*ui.resources;const auto screen=state_->screen;
+        const auto& row=editing_.rows[genre.rows[static_cast<std::size_t>(number)]];
+        const auto text=TrackText(row);
+        resources.Printf(screen,artist,"%s",text.second.c_str());
+        resources.Printf(screen,title,"%s",text.first.c_str());
+        const auto status=enabled?row.status:0;
+        Require(status>=0 && static_cast<std::size_t>(status)<StatusLabels.size(),"Music status is outside its six source choices");
+        resources.SetLanguageID(screen,state,StatusLabels[static_cast<std::size_t>(status)]);
+        const bool highlighted=listFocus_ && editing_.menuState[0]==number;
+        const auto color=highlighted?PackedColor(ui.highlightedRgb):(!enabled?PackedColor(ui.inactiveRgb):0x00808080u);
+        for(const auto key:{title,artist,state}) {
+            resources.SetTextColor(screen,key,color);resources.SetObjectVisibility(screen,key,1);
+        }
+    }
 public:
     JukeBoxMusicScreen(MainMenuScreenServices& services,std::uint32_t screen)
         :OptionsScreenBase(services,screen),editing_(services.frontend->musicSettings)
@@ -977,7 +1116,16 @@ public:
             soundJukeboxPlayer.audio==services.sounds->audio && soundJukeboxPlayer.IsCartridgeLoaded(),
             "Music screen has no actual cartridge, mixer, race settings or source clock");
         editing_.menuState[0]=0;
-        genres_.Populate(*services.sounds,editing_);ShowPlaylist();
+        genres_.Populate(*services.sounds,editing_);
+        if(services.ui->externalPresentation)PreparePlaylist();
+        ShowPlaylist();
+    }
+    ~JukeBoxMusicScreen() override
+    {
+        if(!playlist_)return;
+        for(const auto& entry:playlistMarkers_) {
+            entry.object->SetTopLeftY(entry.y);entry.object->SetClipToPoly(entry.clip);
+        }
     }
     void ShowPlaylist()
     {
@@ -988,7 +1136,18 @@ public:
         while(selected<topRow_ && topRow_>=0)--topRow_;
         const bool enabled=GenreEnabled(editing_.menuMode);
         const auto visible=std::min<std::int32_t>(5,genre.count);
-        for(std::size_t index=0;index<Titles.size();++index) {
+        if(playlist_) {
+            if(playlistGenre_!=editing_.menuMode || !listFocus_)playlist_->Reset();
+            playlistGenre_=editing_.menuMode;
+            playlist_->Reveal(selected);
+            for(std::size_t i=0;i<playlistRows_.size();++i) {
+                const auto& row=playlistRows_[i];
+                if(i<static_cast<std::size_t>(genre.count))StylePlaylistRow(genre,static_cast<int>(i),enabled,row[0]->key,row[1]->key,row[2]->key);
+                else for(const auto* text:row)resources.SetObjectVisibility(screen,text->key,0);
+            }
+            for(const auto& entry:playlistMarkers_)resources.SetObjectVisibility(screen,entry.object->key,listFocus_);
+            PositionPlaylist();
+        } else for(std::size_t index=0;index<Titles.size();++index) {
             if(static_cast<std::int32_t>(index)>=visible) {
                 for(const auto key:{Titles[index],Artists[index],Statuses[index],FirstMarkers[index],SecondMarkers[index]})
                     resources.SetObjectVisibility(screen,key,0);
@@ -996,22 +1155,10 @@ public:
             }
             const auto number=topRow_+static_cast<std::int32_t>(index);
             Require(number>=0 && number<genre.count,"Music scroller exceeded its genre index bank");
-            const auto& row=editing_.rows[genre.rows[static_cast<std::size_t>(number)]];
-            const auto text=TrackText(row);
-            resources.Printf(screen,Artists[index],"%s",text.second.c_str());
-            resources.Printf(screen,Titles[index],"%s",text.first.c_str());
-            const auto status=enabled?row.status:0;
-            Require(status>=0 && static_cast<std::size_t>(status)<StatusLabels.size(),
-                "Music status is outside its six source choices");
-            resources.SetLanguageID(screen,Statuses[index],StatusLabels[static_cast<std::size_t>(status)]);
             const bool highlighted=listFocus_ && selected==number;
             resources.SetObjectVisibility(screen,FirstMarkers[index],highlighted);
             resources.SetObjectVisibility(screen,SecondMarkers[index],highlighted);
-            const auto color=highlighted?PackedColor(ui.highlightedRgb):
-                (!enabled?PackedColor(ui.inactiveRgb):0x00808080u);
-            for(const auto key:{Titles[index],Artists[index],Statuses[index]}) {
-                resources.SetTextColor(screen,key,color);resources.SetObjectVisibility(screen,key,1);
-            }
+            StylePlaylistRow(genre,number,enabled,Titles[index],Artists[index],Statuses[index]);
         }
         resources.SetObjectVisibility(screen,0xedf2e4eeu,listFocus_ && topRow_!=0);
         resources.SetObjectVisibility(screen,0x20d73d01u,listFocus_ && genre.count>=5 && topRow_!=genre.count-5);
@@ -1080,6 +1227,7 @@ public:
             } else data.sound=6;
             break;
         case ScreenMessage::Tick:
+            if(playlist_ && playlist_->Tick(services.ui->clock->realTimeElapsed))PositionPlaylist();
             if(PreviewElapsed()>0.5f && previewPending_){previewPending_=false;PlayCurrentSelectedSong();}
             if(PreviewElapsed()>30.0f) {
                 Require(soundJukeboxPlayer.Update()==WORLD_AUDIO_OK,"Music preview update failed");

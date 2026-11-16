@@ -46,6 +46,7 @@ public:
     void Bind(const LanguageBindings& bindings);
     void Close();
     void SetLanguage(std::int32_t language);
+    bool CanSelect(std::int32_t language) const;
     void HandleLanguageChange(std::int32_t current,std::int32_t previous);
     void LoadLocalizedSpeech();
     void UnloadLocalizedSpeech();
@@ -70,6 +71,8 @@ private:
     std::unique_ptr<LanguageBindings> bindings_;
     std::unique_ptr<Storage> storage_;
 };
+
+const char* LocalizedSpeechLanguageName(std::int32_t language) noexcept;
 
 // Native byte-text substitutions for the two declared frontend arguments.
 // Other percent bytes remain authored text, including French event percentages

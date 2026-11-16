@@ -39,7 +39,7 @@ hp2_menu_back={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":4194308), Object(InputEventJoypadButton,"device":-1,"button_index":1)]
 }
-hp2_name_edit_delete={
+hp2_menu_help={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"keycode":4194312)]
 }
@@ -65,29 +65,27 @@ hp2_menu_right={
 }
 hp2_accelerate={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"physical_keycode":87)]
+"events": [Object(InputEventKey,"physical_keycode":4194320)]
 }
 hp2_brake={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"physical_keycode":83)]
+"events": [Object(InputEventKey,"physical_keycode":4194322)]
 }
 hp2_steer_left={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"physical_keycode":65)]
+"events": [Object(InputEventKey,"physical_keycode":4194319)]
 }
 hp2_steer_right={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"physical_keycode":68)]
+"events": [Object(InputEventKey,"physical_keycode":4194321)]
 }
 hp2_roadblock={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":82,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":74)]
 }
 hp2_helicopter={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":84,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":78)]
 }
 hp2_handbrake={
 "deadzone": 0.5,
@@ -95,37 +93,43 @@ hp2_handbrake={
 }
 hp2_horn={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":72,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":72)]
 }
 hp2_l2={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":81,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":90)]
 }
 hp2_r2={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":69,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":65)]
 }
 hp2_l1={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194325,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":66)]
 }
 hp2_camera={
 "deadzone": 0.5,
 "events": [Object(InputEventKey,"physical_keycode":67)]
 }
+hp2_zone_zoom={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":81)]
+}
+hp2_zone_freeze={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":69)]
+}
+hp2_cycle_hud={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":4194306)]
+}
 hp2_select={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194306,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":82)]
 }
 hp2_nitro={
 "deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":16,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":78,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
-]
+"events": [Object(InputEventKey,"physical_keycode":4194325)]
 }
 hp2_debug_console={
 "deadzone": 0.5,

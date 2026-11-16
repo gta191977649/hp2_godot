@@ -197,7 +197,7 @@ func _process(_delta: float) -> bool:
         if pursuit and sample.get("track", -1) != 13:
             return _fail("expected_track_13")
         if route == null and not arrest_nis:
-            _key(KEY_W, true)
+            _key(KEY_UP, true)
         stage = 8
     if route != null and stage >= 8:
         return _run_full_event(sample, screen)
@@ -232,7 +232,7 @@ func _process(_delta: float) -> bool:
             _finish(sample, "busted-cleanup")
         return false
     if stage == 8 and sample.get("speed", 0) >= 12 and sample["step"] >= 80:
-        _key(KEY_W, false)
+        _key(KEY_UP, false)
         _capture("race-hud")
         _tap(KEY_ESCAPE)
         stage = 9
@@ -374,14 +374,14 @@ func _test_player_name() -> void:
         for i in range(7):
             await _name_key(KEY_RIGHT)
         await _name_key(KEY_BACKSPACE)
-        await _name_key(KEY_W, 87)
+        await _name_key(KEY_UP, 87)
         await _name_key(KEY_ESCAPE)
     else:
         for i in range(7):
             await _name_key(KEY_DELETE)
         if race.telemetry().has("debug_console_open"):
             await _name_key(KEY_QUOTELEFT)
-            await _name_key(KEY_W, 87)
+            await _name_key(KEY_UP, 87)
             await _name_key(KEY_QUOTELEFT)
         for letter in "WaSd9.!Z":
             await _name_key(letter.to_upper().unicode_at(0), letter.unicode_at(0))

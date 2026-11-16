@@ -11,6 +11,7 @@ namespace hp2 {
 class ImGuiOverlay;
 class TrackViewer;
 class GameResources;
+class ControlSettings;
 
 class RacePresentation : public godot::Node3D {
     GDCLASS(RacePresentation, godot::Node3D)
@@ -21,6 +22,7 @@ public:
     static godot::String validate_game_iso(const godot::String& path);
     void set_graphics_menu_settings(const godot::Callable& settings);
     void set_subtitle_setting(const godot::Callable& setting);
+    void set_controls_settings(const godot::Callable& settings);
     godot::String start_game(const godot::String& assets, const godot::String& profile, int track,
         int tree, int event, bool nativeDebug, bool isolatedProfile);
     void _process(double delta) override;
@@ -46,6 +48,7 @@ private:
     void open_track_viewer();
     void service_track_viewer(double delta);
 #endif
+    std::unique_ptr<ControlSettings> controlSettings_;
     std::unique_ptr<Session> session_;
     godot::Callable graphicsMenuSettings_;
     godot::Callable subtitleSetting_;

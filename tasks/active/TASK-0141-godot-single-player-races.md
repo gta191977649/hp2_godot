@@ -97,10 +97,10 @@ Ordinary launches now read Godot's mapped gamepad state. A button press or
 deliberate stick movement selects the active P1 gamepad, including devices
 connected during a race. Keyboard input remains available with a gamepad
 connected. The frontend and replay forward their respective inputs to the
-existing controller scanner. The keyboard defaults use Arrow keys in menus,
-WASD for driving, Backspace for Back, and Esc for pause and replay exit.
-Name entry, Track Viewer, and credits reuse existing Godot actions where the
-same keyboard key already has a binding. This change is in the Godot host.
+existing controller scanner. The keyboard defaults use arrow keys in menus
+and races, Backspace for Back, and Esc for pause and replay exit. Name entry
+and credits reuse the menu actions. The Track Viewer keeps its free-camera
+WASD shortcuts. This change is in the Godot host.
 
 The Windows checks used Godot 4.7.2. The tracked menu smoke injects Godot
 events on an enumerated virtual Xbox 360 controller. A separate ViGEm run
@@ -140,12 +140,149 @@ profiles and without `HP2_MVP_TEST_PROFILE`. With a regular test profile, use
 py -3 local/issue-1/controller_smoke.py
 ```
 
+## Controls settings hub
+
+Options opens a three-row Controls hub with a live device name and separate
+Keyboard Settings and Controller Settings pages. The host borrows the HP2
+Options art and fonts, uses the original highlight and back stack, and
+aligns the headings, text columns and selection rails with the movie
+panel. Godot clips the
+background video to the authored movie panel while preserving its aspect
+ratio. The keyboard page captures one physical key per driving action and
+confirms conflicts before swapping. Menu shortcuts stay available during
+normal navigation. The controller page opens the existing layout picker and
+adds adjustable left-stick dead zone and sensitivity.
+
+The alignment smoke in `tools/test_mvp_controls_settings.gd` checks the
+movie edges against the row rails, confines the tab rails to the selected
+tab, and checks the steering arrow against its value. The Release project was
+checked at 960×720 with Vulkan and 1280×720 with Direct3D 12. Debug and
+Release use the `stage_mvp` build target. A separate Display Options
+pointer-scroll test reports row `52e039f9` missing, also reproduced by
+entering Display Options directly without visiting Controls.
+
+The Godot Options entry displays the host's Controls label while that
+page is live. It restores the authored label and language ID on close.
+The submenu rows use plain labels and the HP2 selection highlight.
+
+Keyboard Settings uses three HP2-styled tabs. Their focus rails fit the
+selected tab, and the binding list uses full-width rails and the original
+Display Options scroll arrows. Cop Mode presents its shared Siren key as
+a read-only row. The native gray footer describes the selected option.
+The scroll arrows convey overflow without navigation text.
+Key capture feedback stays in the active value, and a save failure opens
+the native one-button dialog. Borrowed art is restored when leaving.
+
+Display Options supplies seven fixed `BOTTOM_MASK` pieces in addition to
+its item masks. The Controls pages now hide those fixed pieces and render
+an authored `MI_1_MASK` copy for each port-side row. The native
+`FlailerSelectionSet` clears the selected mask, and the same row geometry
+drives the mask, caption and scrolling. The port exposes the existing
+`OptionsScreenBase::PositionHighlightBars` placement for these rows. The
+stock Options caller uses the same placement and offsets. The restored
+footer uses `FlailerAnimatedBlurb`, with its original artwork, typography,
+and position. The legacy Display Options presentation data is restored on
+page exit. The Controls smoke checks the device-row shade, scrolling
+geometry, footer bounds and Display Options restoration.
+
+Controls takes the row pitch, mask height and text offsets from the
+authored Options assets. The front-end smoke compares the mask height
+and pitch with the live Audio Options page. Keyboard Settings uses five
+visible binding rows so it can retain the authored gaps, the category
+tabs and the reset row within the movie panel.
+
+Godot previously bypassed the native description fade and slide.
+The existing `FlailerAnimatedBlurb` now runs its PAL249348 animation
+under the external frontend presenter. Its single-text animation group
+can update the original Flailer coordinates, and Controls clips the
+moving text to the authored footer. The original alpha, duration and
+cubic slide come from the implementation documented in
+[Frontend scroll evidence](../../docs/FRONTEND_SCROLL_BACKGROUND.md).
+The smoke observes the slide settling in both Audio Options and Controls.
+
+The Options extension previously repositioned only the rows after
+Graphics. Its host layout now uses one pitch and mask height for every
+enabled entry. It removes the borrowed fixed gap masks while active and
+restores the borrowed objects on exit. The full set of eight Options
+entries fits inside the authored video panel.
+
+The released NTSC Options branch hides Languages. The Godot host instead
+uses the native Language Options screen when the mounted assets contain
+multiple selectable language packs. The availability check requires the
+authored text and speech resources and shares the original speech-file
+mapping from PAL table 2B6228. The native language loader and the profile
+serializer still own the language value. The host calls the ordinary
+profile autosave after a successful selection when enabled. See
+[Language Options evidence](../../docs/FRONTEND_MENU_LANGUAGE.md) for
+the original callbacks and source identities.
+
+The Windows language smoke on the US asset image checked equal Options
+mask spacing and changed English to French and back. It checked that the
+Options strings refreshed, the reopened language list selected the
+current language, and both changes reached the saved profile.
+
+Release and Debug staged with `cmake --build --preset godot-mvp-{release,debug} --target stage_mvp`
+using the respective presets. `tools/test_mvp_controls_settings.gd` passed
+at 960×720 and 1120×630 with the virtual Xbox controller and mouse.
+The reload pass verified both reset dialogs, and
+`HP2_MVP_CONTROLS_SAVE_FAILURE=1` verified that a failed save opens the
+message and leaves the live binding intact. Visiting Display Options
+after Controls verified restoration of the borrowed artwork. Captures
+are under `local/controls-settings/restyle-4x3` and `restyle-16x9`.
+
+The reference was `recomp/runtime/pcsettings.cpp` and
+`recomp/runtime/pcplatform.cpp` in the local `nfshp2-port-win` checkout.
+The Godot host keeps physical keys and stick tuning in `launcher.cfg`.
+The existing controller layout chooser keeps saving presets to the active
+HP2 profile. Loading missing settings uses the default Godot bindings and
+the previous stick response.
+
+The game core needed two port-side integration hooks. The existing Options
+row can open registered host pages through the original menu owner. The
+sample's optional layout override lets keyboard actions use the existing
+default layout even when the controller uses a different layout. The
+scanner releases mappings that change and retains edge state for shared
+bindings. No authored table, profile format, race rule, or original
+equivalence status changed. This was checked with a real race using Layout C,
+with the keyboard throttle and brake bindings swapped.
+
+### Verification
+
+```powershell
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
+cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8
+& $engine --path $project --rendering-driver vulkan --resolution 960x720 --script "$PWD/tools/test_mvp_controls_settings.gd"
+& $engine --path $project --rendering-driver vulkan --resolution 1280x720 --script "$PWD/tools/test_mvp_controls_settings.gd"
+& $engine --path $project --rendering-driver vulkan --script "$PWD/tools/test_mvp_control_layout_race.gd"
+```
+
+Use disposable staged projects and local game assets. For the menu smoke,
+start with a fresh launcher configuration and set `HP2_MVP_TEST_PROFILE=1`.
+Set `HP2_MVP_CONTROLS_RELOAD=1` on the next launch to verify and restore
+the defaults. For the race smoke, use a connected gamepad and a disposable
+ordinary profile with its P1 layout set to C. Copy the swapped Up/Down bindings,
+10% dead zone and 110% sensitivity from the first menu smoke. Clear
+`HP2_MVP_TEST_PROFILE` for the live race so it loads that profile.
+
+Windows Release and Debug staging passed. The race smoke verified
+Layout C's Cross brake and Square throttle, the remapped keyboard actions,
+stick tuning, and release of throttle and steering while switching devices.
+The keyboard Track 33 build passed race pause, resume, restart, and quit.
+The keyboard frontend and replay regression passed. The Vulkan controls
+smoke passed at 960 × 720 and 1280 × 720. It checked video coverage and
+aspect, header alignment, focus, keyboard and controller navigation, mouse
+adjustment, reserved keys, conflict cancel and swap, and both resets after
+reloading settings. The OS-visible virtual Xbox 360 controller passed
+disconnect and reconnect in the hub and the Track 33 race. A physical
+wireless DualShock 3 was unavailable. Logs and screenshots are in
+`local/controls-settings`.
+
 ## Be the Cop follow-up
 
 Ultimate Racer events 5, 9, 13, 18 and 27 use authored event kind 6. The
 donor also sets the same pursuit flag for custom Be the Cop. The flag selects
 the police HUD and results through the existing Player and EndGame owners.
-The Godot keyboard shortcuts R and T send the existing Triangle+R2 and
+The Godot keyboard shortcuts J and N send the existing Triangle+R2 and
 Triangle+L2 scanner chords. The modifier precedes the primary edge.
 
 Run the dedicated smoke with a fresh profile and the local game source.
@@ -169,6 +306,165 @@ and returned to the menu in `local/task0141-police-custom.log`.
 Debug and Release staged successfully. The police results smoke covered the timeout
 result. Arresting every opponent and the corresponding victory bonus
 remain open.
+
+## PC keyboard defaults
+
+The supported driving and police actions use the supplied PC defaults.
+Nitro uses Shift in Be the Cop, and N calls the helicopter. The PS2 player
+scanner exposes roadblock and helicopter requests, so there is no Call
+Backup action to bind. Keyboard capture and menu navigation share the
+arrow keys by context. Old custom bindings still load when their keys do
+not conflict with the new defaults.
+
+Keyboard Settings and Controller Settings each offer Restore Defaults.
+Keyboard reset saves the PC bindings to the launcher configuration.
+Controller reset restores Layout A, vibration on, 8% dead zone and 100%
+sensitivity for P1. It applies the layout to the live input router and
+uses the normal profile autosave when enabled.
+The reload smoke started with swapped Up/Down keys, Layout C, vibration
+off and 10%/110% stick tuning. It verified both restores, the controller
+Cancel path and Layout A with vibration on in the saved profile.
+
+The staged Release race reported throttle for Up, brake for Down and the
+correct signed steering for Left and Right. Be the Cop event 5 acquired a
+target with H and consumed both J and N support requests. Debug and Release
+staged with `cmake --build --preset godot-mvp-{debug,release} --target stage_mvp`.
+
+## Keyboard categories and camera input
+
+The Keyboard Settings page opens on Frontend. Left and Right switch tabs
+while the tab bar has focus, Down enters the selected list, and tabs also
+accept pointer clicks. Each group retains its scroll position. The
+keyboard-wide Restore Defaults stays below the list and saves through
+the existing launcher configuration. The device row appears only on the
+Controls hub. Cop Mode shows the binding for the shared
+Horn / Siren action, which is editable in Race Mode.
+
+Delete opens native frontend help and removes a character in the name
+editor. The regular controller menu uses Y for Help and B for Back.
+
+Space applies the handbrake. Tab cycles the HUD using the existing PS2
+D-pad Up action. Menu and race actions can share keys by context, while
+shared pause and replay actions are checked across both contexts. The
+old W and S mouse camera entries have been removed. Only mouse motion
+engages free orbit, with the existing idle blend back to the driving view.
+
+Q requests Look Ahead (Zone Zoom) and E requests the 360° Camera
+(Zone Freeze). The existing scanner table registers PS2 events 0x60 and
+0x5f for these operations. The recovered player handler calls
+`carFramePlayerStartState` with state 2 or 1 through the existing
+RequestZone implementation (PAL 0x00177c88–0x00178354). The Godot host
+passes a port-side keyboard edge to `joystickGenerateEvents` so the
+registered callbacks, native eligibility, Joylog and replay use the same
+route as pad input. The original player code remains untouched. The
+PAL address comes from the existing donor annotations. The staged
+runtime smoke uses the US `SLUS_203.62` asset revision (ELF SHA-256
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`).
+This integration does not establish original runtime equivalence.
+
+### Independent driving shortcuts
+
+The Godot keyboard had synthesized Triangle for Shift, J and N, so the
+source scanner could also cycle the camera. A and Z could request zone
+cameras or police support through the native automatic transmission
+fallback. Godot now queues each dedicated camera, Nitro and police support
+edge through the existing typed scanner/replay path. The bindings use
+native events 0x5d, 0x5f, 0x60, 0x7f, 0x80 and 0x81. A and Z are forwarded
+only when the live driver can shift. The original gamepad scanner, native
+driver callbacks and PAL Nitro eligibility at 0x0013c25c–0x0013c260 remain
+the source of truth. Godot exposes Nitro under Cop Mode and disables the
+donor's optional PC racer Nitro override when it loads the profile config.
+
+Windows checks passed `HP2_MVP_TEST_RACE_SHORTCUTS=1` with
+`tools/test_mvp_race_lifecycle.gd -- --race-track=33`. Shift produced no
+camera, handbrake or Nitro action, A/Z produced no zone request, and C
+changed the camera. `tools/test_mvp_be_the_cop.gd -- --race-event=ultimate-racer:5`
+verified Shift and virtual Xbox R3 Nitro, C, J and N, and no automatic
+A/Z support requests before reaching the results. The matching Nitro
+postprocessing and particle probes passed on that Cop event. The
+Controls smoke confirmed Nitro is in Cop Mode.
+
+### Grouped controls and panel verification
+
+- Release and Debug staged with `cmake --build --preset godot-mvp-release --target stage_mvp --parallel 6`
+  and the equivalent Debug preset.
+- `tools/test_mvp_controls_settings.gd` passed first-run and reload
+  checks at 960×720 and 1120×630. It covered device names and hot-plug,
+  keyboard, pad and pointer navigation, per-tab scroll, conflicts,
+  persisted overrides, both resets and the panel's video coverage.
+- `tools/test_mvp_controller_menus.gd` passed frontend, pause and replay
+  navigation with a Windows virtual Xbox 360 controller.
+  `tools/test_mvp_control_layout_race.gd` passed live keyboard/pad
+  switching, Layout C, and both stick tuning checks.
+- `tools/test_mvp_race_lifecycle.gd -- --race-track=33` passed the keyboard
+  race lifecycle. `tools/test_mvp_be_the_cop.gd -- --race-event=ultimate-racer:5`
+  reached the police results after acquiring a target and using both
+  support keys.
+- `HP2_MVP_TEST_ORBIT_INPUT=1` with
+  `tools/test_mvp_orbit_camera.gd -- --race-track=33` verified mouse-only
+  engagement, idle return, interruption by mouse motion, Q and E,
+  the Tab HUD shortcut, Space handbrake and cursor release on pause.
+  The extended camera geometry smoke varied with the Quick Race vehicle
+  and track fixture. No camera collision or interpolation code changed.
+- A physical wireless PS3 controller was unavailable. Local logs and
+  screen captures are under `local/controls-settings`.
+
+## Frontend list scrolling
+
+Keyboard Settings, the Jukebox playlist and the profile picker previously
+replaced rows immediately when their selection crossed the visible window.
+They now share a port-side clipped viewport driven by the frontend clock and
+the existing Flailer cubic. Each label, value and selection marker follows
+the current scroll position. The underlying input and profile operations
+still commit immediately. The authored Flailer scrollers keep their timing.
+The Jukebox's native path retains its original five-slot behavior.
+
+Build with `cmake --build --preset godot-mvp-release --target stage_mvp` and
+the corresponding Debug preset. `tools/test_mvp_controls_settings.gd` and
+`tools/test_mvp_boot_profile.gd` sample row motion in Keyboard Settings and
+the profile picker. `HP2_MVP_TEST_SCROLL=1` enables Audio Options and Jukebox
+sampling in `tools/test_mvp_menu_navigation.gd`. The keyboard motion checks
+also passed in both directions at 30 FPS.
+
+## Menu video backdrops
+
+Frontend movies use one aspect-preserving cover calculation clipped to
+their active Flailer movie quad. Menu videos extend to all four edges of
+their panel. The surrounding grid and menu content stay visible.
+Startup logos and the intro use their authored display rectangles.
+The YUV shader follows frontend canvas fades.
+
+Builds with `cmake --build --preset godot-mvp-release --target stage_mvp`
+and the corresponding Debug preset passed. The Release Godot project
+passed `tools/test_mvp_menu_navigation.gd` on Direct3D 12 and
+`tools/test_mvp_controls_settings.gd` on Vulkan. The video sweeps in
+`tools/test_mvp_frontend_resize.gd` verified the main menu and startup
+videos at 800×600, 1120×630, 1260×540 and 540×720 with
+`HP2_MVP_VIDEO_RESIZE_ONLY=1`. The menu navigation script checked the
+Hot Pursuit, World Racing, Main Menu and Options video panels.
+The reviewed Options capture is
+`local/controls-settings/panel-final-4x3/options-video-panel.png`.
+
+## Godot gamepad takeover and vibration
+
+The host samples the mapped driving axes through Godot and transfers input
+after a fresh crossing of the steering or pedal dead zone plus five percentage
+points. The native PS2 layout still owns steering, pedals, and button actions.
+The host forwards the existing native two-motor output to the selected pad and
+stops it on device, focus, and race lifecycle changes. This required no new
+game-core changes.
+
+`cmake --build build/godot-mvp-release --target stage_mvp -j 8` and
+`cmake --build build/godot-mvp-debug --target hp2_blackbox -j 8` passed.
+`tools/test_mvp_control_layout_race.gd` ran through one World Racing race
+on Vulkan with a ViGEm Xbox controller, layout A, and a disposable profile.
+It verified steering in both directions, keyboard takeover, both pedal inputs,
+handbrake, horn, look back, camera, HUD, pause/resume and both shifts. ViGEm
+reported strong-motor output from the original pause options preview followed
+by zero. Select did not produce the expected recovery timestamp. Testing
+ended at the user's request. Driving vibration, other layouts and modes, and
+physical DualShock 3 behavior remain unverified in this run. Local trace
+`local/rumble-validation/single-race-final.log`.
 
 ## Remaining work
 

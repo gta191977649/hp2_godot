@@ -47,7 +47,7 @@ func _process(_delta: float) -> bool:
     return false
 
 func _accelerate(pressed: bool) -> void:
-    _key(KEY_W, pressed)
+    _key(KEY_UP, pressed)
 
 func _recover() -> void:
     _key(KEY_TAB, true)

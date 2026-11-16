@@ -32,7 +32,7 @@ func _process(_delta: float) -> bool:
             return _fail("scene_publish", sample)
         start = sample
         started_at = Time.get_ticks_msec()
-        _key(KEY_W, true)
+        _key(KEY_UP, true)
         return false
     if Time.get_ticks_msec() - started_at < 1500:
         return false
@@ -42,7 +42,7 @@ func _process(_delta: float) -> bool:
     if distance < 40 or sample["speed"] < 12 or sample["step"] - start["step"] < 90:
         return false
     capturing = true
-    _key(KEY_W, false)
+    _key(KEY_UP, false)
     _capture(sample, distance)
     return false
 

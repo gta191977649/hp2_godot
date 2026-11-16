@@ -3,6 +3,7 @@ extends "test_mvp_debug_menu.gd"
 const BOOT := "BootAutoload"
 const BUTTON := 0xe0105663
 const PICKER := "Select Profile"
+const FIRST_PROFILE_ROW := 0x48525000
 const SAVE_LOAD := "Phils Load Save"
 var profile: String
 var scenario := OS.get_environment("HP2_MVP_BOOT_PROFILE")
@@ -157,10 +158,11 @@ func type_c() -> void:
     await input_tap(event)
 
 func choose_row(row: int) -> void:
+    var first := FIRST_PROFILE_ROW if race.telemetry().get("screen") == PICKER else FIRST
     for direction in [KEY_DOWN, KEY_UP]:
         for attempt in range(10):
             var selected: int = race.telemetry().get("selected_item", 0)
-            if selected == FIRST + row:
+            if selected == first + row:
                 await key(KEY_ENTER)
                 return
             await key(direction)
@@ -244,8 +246,8 @@ func check_options(project: String) -> bool:
 
 func check_scroll() -> bool:
     await wait_screen(PICKER)
-    await select(FIRST + 6)
-    await key(KEY_DOWN)
+    await select(FIRST_PROFILE_ROW + 6)
+    await check_smooth_row(KEY_DOWN, FIRST_PROFILE_ROW + 3)
     await key(KEY_DOWN)
     await capture("Scrolled-Profile-Picker")
     await key(KEY_ENTER)

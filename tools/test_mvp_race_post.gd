@@ -49,17 +49,23 @@ func _profile(race: Node) -> void:
     quit()
 
 func _check_nitro(race: Node) -> void:
+    if not race.telemetry().get("police_hud", false):
+        push_error("Run the Nitro smoke with --race-event=ultimate-racer:5")
+        quit(1)
+        return
     var path := OS.get_environment("HP2_PHOTO_DIR")
     Input.action_press("hp2_accelerate")
     await create_timer(0.8).timeout
     var before := await _frame()
-    Input.action_press("hp2_nitro")
+    var nitro := InputEventAction.new()
+    nitro.action = &"hp2_nitro"
+    nitro.pressed = true
+    Input.parse_input_event(nitro)
     while not race.telemetry().get("radial_blur_active", false):
         await process_frame
     var onset: int = race.telemetry().step
     await create_timer(0.25).timeout
     var during := await _frame()
-    Input.action_release("hp2_nitro")
     while race.telemetry().get("radial_blur_active", false):
         await process_frame
     var after := await _frame()

@@ -14,6 +14,7 @@
 #include "indep/inc/World.hpp"
 #include "indep/inc/Collision.hpp"
 #include "indep/inc/Race.hpp"
+#include "indep/inc/TrackedController.hpp"
 #include "indep/inc/Replay.hpp"
 #include "indep/inc/Timer.hpp"
 #include "indep/inc/Track.hpp"
@@ -201,6 +202,40 @@ void collect_menu_alignment_diagnostics(godot::Dictionary& result, const Fronten
         }
     }
     result["menu_alignment_bounds"] = bounds;
+}
+
+void collect_controls_diagnostics(godot::Dictionary& result, const RaceStateView& race,
+    const FrontendStateView& frontend, const godot::String& device) {
+    static const bool enabled = godot::OS::get_singleton()->get_environment("HP2_MVP_TEST_CONTROLS") == "1";
+    if (!enabled) return;
+    result["controls_device"] = device;
+    result["controls_help_open"] = frontend.pointerHelp;
+    const auto* players = race.simulation ? race.simulation->players : nullptr;
+    const auto* player = players ? players->playersByNumber[0] : nullptr;
+    if (player) {
+        result["controls_hud_profile"] = player->settings.inputProfile;
+        result["controls_camera_kind"] = carFramePlayerCameraKind(player);
+        result["controls_camera_state"] = player->movement.steeringFeedbackBusy;
+        result["controls_camera_view"] = player->settings.cameraView;
+        result["controls_automatic"] = player->settings.gearInputMode == 0;
+        result["controls_look_back"] = player->lookBack != 0;
+    }
+    const auto* driver = player ? player->driver : nullptr;
+    if (driver && driver->kind == CAR_DRIVER_REAL && driver->owner.real) {
+        const auto& input = driver->owner.real->input;
+        result["controls_throttle"] = input.throttleInput;
+        result["controls_brake"] = input.brakeInput;
+        result["controls_steering"] = input.steeringInput;
+        result["controls_handbrake"] = input.handbrakeInput;
+        if (input.frame)
+            result["controls_horn"] = carFrameState(input.frame)->blinkVisible != 0;
+        if (input.movement) {
+            const auto& bindings = input.movement->bindings;
+            if (bindings.controls) result["controls_gear_request"] = bindings.controls->gearRequest;
+            if (bindings.ownerMotion) result["controls_recovery_started"] = bindings.ownerMotion->windowStartTicks;
+        }
+        result["controls_nitro_active"] = realDriverNitroActive(&input) != 0;
+    }
 }
 
 void collect_replay_diagnostics(godot::Dictionary& result, const RaceStateView& race,

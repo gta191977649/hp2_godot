@@ -62,8 +62,7 @@ using namespace godot;
 namespace {
 enum Category { Placement, RouteNode, Emitter, CategoryCount };
 constexpr std::array<const char*, CategoryCount> categories{"Scenery", "Route nodes", "Emitters"};
-constexpr std::array<const char*, 7> movementActions{"hp2_steer_left", "hp2_steer_right",
-    "hp2_accelerate", "hp2_brake", "hp2_r2", "hp2_l2", "hp2_l1"};
+constexpr std::array flightKeys{KEY_A, KEY_D, KEY_W, KEY_S, KEY_E, KEY_Q, KEY_SHIFT};
 constexpr float radians = 3.14159265358979323846f / 180.0f;
 
 struct Entity {
@@ -221,7 +220,7 @@ struct TrackViewer::Storage {
     std::vector<Entity> entities;
     std::vector<std::size_t> filtered;
     std::array<bool, CategoryCount> categoryVisible{true, true, true};
-    std::array<bool, movementActions.size()> movement{};
+    std::array<bool, flightKeys.size()> movement{};
     ImGuiTextFilter entityFilter;
     Request request;
     std::string failure;
@@ -841,10 +840,12 @@ bool TrackViewer::input(const Ref<InputEvent>& event) {
     }
     if (s.captured) {
         if (event->is_action_pressed("hp2_pause")) s.capture(false);
-        if (Ref<InputEventKey>(event).is_valid())
-            for (std::size_t index = 0; index < movementActions.size(); ++index)
-                if (event->is_action(movementActions[index]) && !event->is_echo())
-                    s.movement[index] = event->is_pressed();
+        if (const Ref<InputEventKey> key = event; key.is_valid() && !key->is_echo()) {
+            const auto physical = key->get_physical_keycode();
+            const auto code = physical == KEY_NONE ? key->get_keycode() : physical;
+            const auto match = std::find(flightKeys.begin(), flightKeys.end(), code);
+            if (match != flightKeys.end()) s.movement[match - flightKeys.begin()] = key->is_pressed();
+        }
     }
     return true;
 }

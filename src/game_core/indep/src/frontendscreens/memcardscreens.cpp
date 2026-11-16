@@ -18,6 +18,7 @@ constexpr const char* ProfileFilename="profile.json";
 constexpr std::uint32_t ManualScreen=0x9829bfabu;
 constexpr std::uint32_t PickerScreen=0x8bc68340u; // Borrow the authored Display rows and masks.
 constexpr std::uint32_t FirstRow=0x52e039f3u;
+constexpr std::uint32_t FirstProfileRow=0x48525000u;
 constexpr std::size_t VisibleRows=7;
 constexpr std::array<std::uint32_t,VisibleRows> RowMasks{
     0x6e34e350u,0x708a0bf1u,0x72df3492u,0x75345d33u,0x778985d4u,0x79deae75u,0x7c33d716u};
@@ -51,6 +52,12 @@ public:
 
     ~ProfileMenuArt()
     {
+        if(pickerViewport) {
+            if(page.menu==&menu) {
+                menu.root.next=oldFirst;menu.root.previous=oldLast;menu.current=oldCurrent;
+            }
+            pickerItems.clear();
+        }
         if(extraItem) {
             if(page.menu==&menu) {
                 if(menu.current==extraItem.get())menu.current=extraItem->previous;
@@ -69,6 +76,7 @@ public:
         }
         for(const auto& saved:objects) {
             saved.object->SetTopLeftY(saved.y);
+            saved.object->SetClipToPoly(saved.clip);
             resources.SetObjectVisibility(art.key,saved.object->key,saved.visible);
         }
     }
@@ -138,22 +146,96 @@ public:
                       0xd1cda594u,0x9345e4a7u,FirstRow+7,FirstRow+8})Show(key,false);
     }
 
+    void BuildPicker(const std::vector<std::string>& captions,std::size_t selected)
+    {
+        SetPickerTitle();
+        const auto& model=*static_cast<const FlailerTextChunk*>(resources.FindObject(art.key,FirstRow,1));
+        const auto& next=*resources.FindObject(art.key,FirstRow+1,1);
+        auto* mask=static_cast<FlailerBitmapChunk*>(resources.FindObject(art.key,RowMasks[0],2));
+        const auto pitch=next.topLeftY-model.topLeftY;
+        Require(mask && pitch>0.0f,"Profile scrolling requires the authored Display rows");
+        pickerY=model.topLeftY;
+        railY=mask->topLeftY;
+        railHeight=resources.ScaledBitmapHeight(*mask);
+        pickerViewport=std::make_unique<FlailerListViewport>(resources,art,*mask,
+            -4.0f,railY-6.0f,648.0f,pitch*(VisibleRows-1)+railHeight+14.0f,pitch,VisibleRows);
+        for(auto* object=art.objects.next;object!=&art.objects;object=object->next) {
+            if(object->kind==1 && object->topLeftY>=pickerY && object->topLeftY<343.0f) {
+                Remember(*object);object->visible=0;object->DeleteFlailerStrip();
+            }
+        }
+        for(const auto key:RowMasks)Show(key,false);
+        for(const auto key:{UpperRail,LowerRail})if(auto* rail=resources.FindObject(art.key,key)) {
+            Remember(*rail);pickerViewport->Clip(*rail);
+        }
+        oldFirst=menu.root.next;oldLast=menu.root.previous;oldCurrent=menu.current;
+        menu.root.next=menu.root.previous=&menu.root;menu.current=nullptr;
+        for(std::size_t i=0;i<captions.size();++i) {
+            const auto key=FirstProfileRow+static_cast<std::uint32_t>(i);
+            auto& text=pickerViewport->CloneText(model,key);
+            text.visible=1;
+            Write(text,captions[i]);
+            const auto width=resources.ScaledTextWidth(text,nullptr);
+            if(width>475.0f) {text.SetScaleX(text.scaleX*475.0f/width);text.SetScaleY(text.scaleY*475.0f/width);}
+            auto item=std::make_unique<FlailerMenuItem>(&menu,key,static_cast<std::uint32_t>(i));
+            item->object=&text;item->previous=menu.root.previous;item->next=&menu.root;
+            item->previous->next=item.get();menu.root.previous=item.get();
+            pickerItems.push_back(std::move(item));
+        }
+        SelectProfileRow(selected);
+        pickerViewport->Tick(1.0f);
+        PositionPickerRows();
+    }
+
+    void SelectProfileRow(std::size_t row)
+    {
+        pickerSelection=row;
+        pickerViewport->Reveal(row);
+        Show(ScrollUp,pickerViewport->Top()>0);
+        Show(ScrollDown,pickerViewport->Top()+VisibleRows<pickerItems.size());
+        PositionPickerRails();
+    }
+
+    bool AnimatePicker(float elapsed)
+    {
+        if(pickerViewport->Tick(elapsed))PositionPickerRows();
+        return pickerViewport->Moving();
+    }
+
     FlailerResources& resources;
     FlailerScreenResource& art;
     FlailerScreen& page;
     FlailerMenu& menu;
 private:
     struct Text {FlailerTextChunk* object;std::string value;std::uint32_t language;};
-    struct Object {FlailerObjectChunk* object;float y;std::uint8_t visible;};
+    struct Object {FlailerObjectChunk* object;float y;std::uint8_t visible;std::uint32_t clip;};
     std::vector<Text> texts;
     std::vector<Object> objects;
     FlailerTextChunk extraText;
     std::unique_ptr<FlailerMenuItem> extraItem;
+    std::unique_ptr<FlailerListViewport> pickerViewport;
+    std::vector<std::unique_ptr<FlailerMenuItem>> pickerItems;
+    FlailerMenuItem *oldFirst{},*oldLast{},*oldCurrent{};
+    float pickerY{},railY{},railHeight{};
+    std::size_t pickerSelection{};
+
+    void PositionPickerRails()
+    {
+        const auto y=railY+pickerViewport->Displacement(pickerSelection);
+        Place(UpperRail,y-6.0f);Place(LowerRail,y+railHeight);
+    }
+
+    void PositionPickerRows()
+    {
+        for(std::size_t i=0;i<pickerItems.size();++i)
+            pickerItems[i]->object->SetTopLeftY(pickerY+pickerViewport->Displacement(i));
+        PositionPickerRails();
+    }
 
     void Remember(FlailerObjectChunk& object)
     {
         if(std::none_of(objects.begin(),objects.end(),[&](const auto& saved){return saved.object==&object;}))
-            objects.push_back({&object,object.topLeftY,object.visible});
+            objects.push_back({&object,object.topLeftY,object.visible,object.clipObjectKey});
     }
     static void Write(FlailerTextChunk& text,const std::string& value)
     {
@@ -202,7 +284,7 @@ struct MemcardScreens::Storage {
     std::vector<Profile> profiles;
     std::unique_ptr<ProfileMenuArt> page;
     std::unique_ptr<FlailerHighlightAnimation> highlight;
-    std::size_t offset{};
+    std::size_t pickerSelection{};
     bool pickerAtBoot{},switchPopup{};
     int switchDecision{};
     bool requireNamedProfile{};
@@ -233,45 +315,28 @@ struct MemcardScreens::Storage {
         });
         return true;
     }
-    void RefreshPicker() {
-        for(std::size_t row=0;row<VisibleRows;++row) {
-            const auto index=offset+row;
-            const auto key=FirstRow+static_cast<std::uint32_t>(row);
-            const bool visible=index<=profiles.size();
-            if(auto* item=page->menu.FindItem(key)) {
-                if(visible)item->SetMenuItemState(1);
-                else item->ClearMenuItemState(1);
-            }
-            page->Show(key,visible);
-            page->Show(RowMasks[row],visible);
-            if(!visible)continue;
-            if(index==profiles.size()) {
-                page->Relabel(key,"Create Profile");
-                continue;
-            }
-            const auto& profile=profiles[index];
+    std::vector<std::string> ProfileCaptions() const {
+        std::vector<std::string> captions;
+        captions.reserve(profiles.size()+1);
+        for(const auto& profile:profiles) {
             std::string caption=profile.name;
             if(profile.valid && std::count_if(profiles.begin(),profiles.end(),[&](const Profile& other){
                 return other.valid && other.name==profile.name;
             })>1)caption+=" ("+(profile.file==ProfileFilename?std::string("legacy"):profile.file.substr(8,6))+")";
             if(profile.file==activeFile)caption+=" (Active)";
             if(!profile.valid)caption+=" (Unavailable)";
-            page->Relabel(key,caption);
+            captions.push_back(std::move(caption));
         }
-        page->Show(ScrollUp,offset>0);
-        page->Show(ScrollDown,offset+VisibleRows<=profiles.size());
+        captions.emplace_back("Create Profile");
+        return captions;
     }
     void PositionPicker(std::size_t row) {
-        const auto index=offset+row;
-        if(row>=VisibleRows || index>profiles.size())return;
-        std::int32_t x,top,width,bottom;
-        if(page->resources.GetBoundingBox(PickerScreen,RowMasks[row],x,top,width,bottom,menus->ui->language)) {
-            page->Place(UpperRail,static_cast<float>(top-6));
-            page->Place(LowerRail,static_cast<float>(bottom));
-        }
-        highlight->SetCurrentMenuItem(FirstRow+static_cast<std::uint32_t>(row));
-        page->Relabel(0x75980cf0u,index==profiles.size()?"Create a new profile.":
-            profiles[index].valid?"Load this profile.":"This profile is unavailable.");
+        if(row>profiles.size())return;
+        pickerSelection=row;
+        page->SelectProfileRow(row);
+        highlight->SetCurrentMenuItem(FirstProfileRow+static_cast<std::uint32_t>(row));
+        page->Relabel(0x75980cf0u,row==profiles.size()?"Create a new profile.":
+            profiles[row].valid?"Load this profile.":"This profile is unavailable.");
     }
     void ShowNotice(const std::string& message) {
         popupMessage=message;
@@ -596,32 +661,28 @@ void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& paylo
         return;
     }
     if(picker) {
-        const auto row=static_cast<std::size_t>(payload.key-FirstRow);
+        const auto row=static_cast<std::size_t>(payload.key-FirstProfileRow);
         if(message==ScreenMessage::ScreenActivate) {
             state.page=std::make_unique<ProfileMenuArt>(*state.menus,PickerScreen);
-            state.page->SetPickerTitle();
+            state.pickerSelection=std::min(state.pickerSelection,state.profiles.size());
+            state.page->BuildPicker(state.ProfileCaptions(),state.pickerSelection);
             state.highlight=std::make_unique<FlailerHighlightAnimation>(*state.menus->ui,PickerScreen,0xab671c9au,
                 state.menus->ui->animationSettings.highlightColor);
-            state.RefreshPicker();
-            if(!state.offset)payload.value=1;
+            payload.value=static_cast<std::int32_t>(state.pickerSelection+1);
         } else if(message==ScreenMessage::ScreenDeactivate) {
             state.highlight.reset();
             state.page.reset();
         } else if(message==ScreenMessage::Tick) {
-            state.highlight->Animate();
+            if(!state.page->AnimatePicker(state.menus->ui->clock->realTimeElapsed))state.highlight->Animate();
         } else if(message==ScreenMessage::Highlight) {
             state.PositionPicker(row);
-        } else if(message==ScreenMessage::Previous && row==0) {
+        } else if((message==ScreenMessage::Previous && row==0) ||
+                  (message==ScreenMessage::Next && row==state.profiles.size())) {
             payload.value=1;
-            if(state.offset) {--state.offset;state.RefreshPicker();state.PositionPicker(row);}
-        } else if(message==ScreenMessage::Next &&
-                  (row==VisibleRows-1 || state.offset+row>=state.profiles.size())) {
-            payload.value=1;
-            if(state.offset+VisibleRows<=state.profiles.size()) {++state.offset;state.RefreshPicker();state.PositionPicker(row);}
         } else if(message==ScreenMessage::LeaveScreen && (state.pickerAtBoot || Busy())) {
             payload.value=0;payload.sound=0;
-        } else if(message==ScreenMessage::Select && row<VisibleRows && !Busy()) {
-            const auto index=state.offset+row;
+        } else if(message==ScreenMessage::Select && row<=state.profiles.size() && !Busy()) {
+            const auto index=row;
             if(index==state.profiles.size()) {
                 state.RequestSwitch({},state.pickerAtBoot?Creation::StartupPicker:Creation::OptionsPicker);
             } else if(index<state.profiles.size()) {
@@ -656,8 +717,8 @@ void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& paylo
                 } else if(scanned) {
                     screens.DismissPopup(state.bootPopup);
                     state.bootStage=Stage::Choosing;
+                    state.pickerSelection=0;
                     state.pickerAtBoot=true;
-                    state.offset=0;
                     screens.ChangeToScreen("Select Profile",true);
                 } else {
                     state.bootStage=Stage::LoadError;
@@ -744,8 +805,8 @@ void MemcardScreens::HandleEvent(ScreenMessage message,ScreenCallbackData& paylo
         else if(payload.key==FirstRow+1) {
             if(!state.ScanProfiles())state.ShowNotice("Cannot check the saved profiles. "+state.error);
             else {
+                state.pickerSelection=0;
                 state.pickerAtBoot=false;
-                state.offset=0;
                 screens.ChangeToScreen("Select Profile",true);
             }
         } else if(payload.key==FirstRow+3)state.RequestSwitch({},Creation::Options);

@@ -4,6 +4,7 @@
 #include "indep/inc/Point.hpp"
 #include <array>
 #include <cstdint>
+#include <deque>
 #include <vector>
 #include <memory>
 #include <string>
@@ -96,7 +97,7 @@ private:
 class FlailerAnimationGroup final {
 public:
     FlailerAnimationGroup(FlailerUiState& ui,std::uint32_t screen,std::uint32_t group,
-        std::uint32_t anchor,float initial,float desired,float duration);
+        std::uint32_t anchor,float initial,float desired,float duration,bool animateExternally=false);
     ~FlailerAnimationGroup();
     FlailerAnimationGroup(const FlailerAnimationGroup&)=delete;
     FlailerAnimationGroup& operator=(const FlailerAnimationGroup&)=delete;
@@ -109,6 +110,8 @@ public:
     std::int32_t savedX{};
     std::int32_t savedY{};
     tCubic1D position{};
+private:
+    bool animateExternally_{};
 };
 
 // Original tAnimatedBlurb. Its slide and alpha members borrow the same
@@ -216,6 +219,33 @@ private:
 }
 
 namespace hp2 {
+// Port-side viewport for lists with a row for each item. Navigation commits
+// immediately while the clipped artwork moves on the frontend clock.
+class FlailerListViewport final {
+public:
+    FlailerListViewport(FlailerResources& resources,FlailerScreenResource& screen,
+        const FlailerBitmapChunk& model,float left,float top,float width,float height,
+        float pitch,std::size_t visibleRows);
+    ~FlailerListViewport();
+    FlailerListViewport(const FlailerListViewport&)=delete;
+    FlailerListViewport& operator=(const FlailerListViewport&)=delete;
+    void Reset(std::size_t top=0);
+    bool Reveal(std::size_t row);
+    bool Tick(float elapsed);
+    bool Moving() const {return scroll_.mode!=0;}
+    std::size_t Top() const {return top_;}
+    float Displacement(std::size_t row) const {return static_cast<float>(row)*pitch_-scroll_.value;}
+    void Clip(FlailerObjectChunk& object) const {object.SetClipToPoly(clip_.key);}
+    FlailerTextChunk& CloneText(const FlailerTextChunk& model,std::uint32_t key);
+private:
+    FlailerScreenResource& screen_;
+    FlailerBitmapChunk clip_;
+    std::deque<FlailerTextChunk> texts_;
+    tCubic1D scroll_{};
+    float pitch_;
+    std::size_t visibleRows_,top_{};
+};
+
 // Original tScrollingMenuList and its owned tMenuAnimElement list. Resources
 // are borrowed; deleting the list restores their original vertical positions.
 class FlailerScrollingMenuList final {

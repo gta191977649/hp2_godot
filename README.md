@@ -43,16 +43,29 @@ Enable **Options → Display → Subtitle** for English police radio captions du
 | --- | --- |
 | Navigate menus | Arrow keys |
 | Confirm / Go back | Enter / Backspace |
-| Accelerate, brake, and steer | WASD |
-| Handbrake / Change camera / Recover car | Space / C / Tab |
-| Shift gears / Look back / Horn | Q and E / Shift / H |
+| Accelerate / Brake or reverse | Up / Down |
+| Steer left / right | Left / Right |
+| Handbrake / Change camera / Reset car | Space / C / R |
+| Shift up / down | A / Z |
+| Look behind / Horn or siren | B / H |
+| Look Ahead (Zone Zoom) / 360° Camera (Zone Freeze) | Q / E |
+| Cycle HUD | Tab |
+| Roadblock / Helicopter (Be the Cop) | J / N |
+| Nitro (Be the Cop) | Shift |
 | Pause a race | Esc |
 
 Menus also support a mouse and gamepad. With the default gamepad layout, use the
 left stick to steer, Cross (A) to accelerate, Square (X) to brake, R1 (RB) for the
 handbrake, and Start to pause. Press a button or move a stick to use a connected
 gamepad at any time. Keyboard controls are available throughout.
-Controller settings are available under **Options**.
+Open **Options → Controls** to see the current input device, rebind driving
+and menu keys, choose an HP2 controller layout, or tune the steering stick.
+Move the mouse during a race to orbit the car. When the mouse is idle, the
+camera blends back to the selected driving view.
+Keyboard Settings groups bindings into Frontend, Race Mode, and Cop Mode.
+**Restore Defaults** on that page restores all three groups. In Controller
+Settings it restores Layout A, vibration, 8% dead zone, and 100% sensitivity.
+The PC version's Call Backup command is unavailable in the PS2 game core.
 
 In Instant Replay, use Enter or Cross (A) to play or pause, Left/Right to
 jump between markers, C or Triangle (Y) to change camera, and Esc or Start
@@ -61,6 +74,10 @@ to exit.
 ## Saves and troubleshooting
 
 `profiles/` holds player saves and `launcher.cfg` holds the ISO path and graphics settings. Both are beside the launcher, or beside `HP2.app` on macOS. Keep them when updating. Use **Options → Save/Load** to create or switch profiles. Save and Autosave write to the active profile.
+
+Custom keyboard bindings and stick tuning are saved in the `[controls]`
+section of `launcher.cfg` and apply across profiles. The controller layout
+is saved in the active HP2 profile.
 
 If the game rejects an ISO, check that it is the complete US PS2 release (`SLUS_203.62`). If you report a problem, include the release version, platform, graphics API, and steps to reproduce it. To capture a log, start the launcher with `--log-file hp2.log` and attach the log.
 

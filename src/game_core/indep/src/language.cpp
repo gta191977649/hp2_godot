@@ -166,6 +166,24 @@ void LanguageManager::LoadFileChunks()
     }
 }
 
+const char* LocalizedSpeechLanguageName(std::int32_t language) noexcept
+{
+    // Final PAL table2B6228, including English speech for Swedish.
+    constexpr std::array names{"English","French","German","Italian","Spanish","English"};
+    return static_cast<std::uint32_t>(language)<names.size() ? names[language] : nullptr;
+}
+
+bool LanguageManager::CanSelect(std::int32_t language) const
+{
+    const auto* speech=LocalizedSpeechLanguageName(language);
+    if(!speech || !files_)return false;
+    const auto text=files_->TryOpenPhysical(languageFiles[language]);
+    if(!text || !text->range.Size() || text->range.Size()>maximumFileBytes_)return false;
+    const auto base=std::string("Sound\\Speech\\")+speech;
+    return files_->TryOpenPhysical(base+"BAN.pck").has_value() &&
+        files_->TryOpenPhysical(base+"DAT.pck").has_value();
+}
+
 void LanguageManager::SetLanguage(std::int32_t language)
 {
     if (language==currentLanguage)return;

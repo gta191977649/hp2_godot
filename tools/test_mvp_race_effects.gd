@@ -43,17 +43,17 @@ func _process(_delta: float) -> bool:
     if not effects:
         return false
     if phase == 0:
-        key(KEY_W,true)
+        key(KEY_UP,true)
         race_step = state.step
         phase = 1
     if phase == 1 and state.step > race_step + 100:
-        key(KEY_A,true)
+        key(KEY_LEFT,true)
         key(KEY_SPACE,true)
         restart_at = state.step
         phase = 2
     if phase == 2 and state.step > restart_at + 42:
         key(KEY_SPACE,false)
-        key(KEY_A,false)
+        key(KEY_LEFT,false)
         phase = 3
     var lamp_count := 0
     var sun_count := 0
