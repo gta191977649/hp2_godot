@@ -63,7 +63,7 @@ namespace {
 enum Category { Placement, RouteNode, Emitter, CategoryCount };
 constexpr std::array<const char*, CategoryCount> categories{"Scenery", "Route nodes", "Emitters"};
 constexpr std::array<const char*, 7> movementActions{"hp2_steer_left", "hp2_steer_right",
-    "hp2_accelerate", "hp2_brake", "hp2_viewer_up", "hp2_viewer_down", "hp2_viewer_boost"};
+    "hp2_accelerate", "hp2_brake", "hp2_r2", "hp2_l2", "hp2_l1"};
 constexpr float radians = 3.14159265358979323846f / 180.0f;
 
 struct Entity {
@@ -840,7 +840,7 @@ bool TrackViewer::input(const Ref<InputEvent>& event) {
         }
     }
     if (s.captured) {
-        if (event->is_action_pressed("hp2_viewer_release")) s.capture(false);
+        if (event->is_action_pressed("hp2_pause")) s.capture(false);
         if (Ref<InputEventKey>(event).is_valid())
             for (std::size_t index = 0; index < movementActions.size(); ++index)
                 if (event->is_action(movementActions[index]) && !event->is_echo())

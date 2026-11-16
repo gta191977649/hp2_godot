@@ -91,6 +91,55 @@ normal acceleration input, and records movement, exit codes and logs. It
 retries failed entries once serially and retains both attempts in the CSV.
 The passing report is `local/campaign-matrix-d5d503e8-97ec-4bf8-bcaf-2c4279eaedf2/results.csv`.
 
+## GitHub issue #1 gamepad input
+
+Ordinary launches now read Godot's mapped gamepad state. A button press or
+deliberate stick movement selects the active P1 gamepad, including devices
+connected during a race. Keyboard input remains available with a gamepad
+connected. The frontend and replay forward their respective inputs to the
+existing controller scanner. The keyboard defaults use Arrow keys in menus,
+WASD for driving, Backspace for Back, and Esc for pause and replay exit.
+Name entry, Track Viewer, and credits reuse existing Godot actions where the
+same keyboard key already has a binding. This change is in the Godot host.
+
+The Windows checks used Godot 4.7.2. The tracked menu smoke injects Godot
+events on an enumerated virtual Xbox 360 controller. A separate ViGEm run
+sends operating-system gamepad input. A physical wireless DualShock 3 and
+the reporter's Bluetooth setup were unavailable for validation.
+
+- `cmake --build --preset godot-mvp-release --target stage_mvp --parallel 6`
+  and the corresponding Debug build passed.
+- `test_mvp_controller_menus.gd` passed duplicate binding checks, title and
+  main menus, selectors, options, credits, event entry into Track 12, pause
+  options and confirmations, and replay transport on both input methods.
+  The gamepad boot run created and saved `aB` using the on-screen keyboard.
+  `test_mvp_boot_profile.gd` also passed its keyboard name and save flow.
+- `test_mvp_race_lifecycle.gd` passed Track 33 driving, pause, resume, restart,
+  and scene teardown with keyboard input and an injected gamepad variant.
+  The OS-visible race smoke passed acceleration, steering, braking, pause
+  and resume, hot-plug, switching between two controllers, keyboard input
+  while both were connected, and reconnect.
+- `test_mvp_results_navigation.gd` passed the Track 13 results, lap times,
+  and exit confirmation on the Debug fixture with both input methods.
+- `test_mvp_graphic_menu.gd` passed the settings and confirmation checks
+  with each input method on Windows Vulkan. The Be the Cop gamepad smoke
+  also passed Race Objective and police controls navigation in the pause menu.
+- `test_mvp_native_debug.gd -- --race-track=33 --debug` passed headless
+  and on Vulkan. An earlier Vulkan attempt saw mouse orbit active at the
+  camera restoration assertion.
+
+Run the tracked menu smoke with a connected controller on a staged project
+with local game assets. Set `HP2_MVP_MENU_KEYBOARD=1` for the keyboard run.
+Set `HP2_MVP_CONTROLLER_BOOT=1` only on a disposable staged project with no
+profiles and without `HP2_MVP_TEST_PROFILE`. With a regular test profile, use
+`HP2_MVP_TEST_PROFILE=1`. Local logs and OS input fixtures are under
+`local/issue-1`.
+
+```powershell
+& $engine --path $project --rendering-driver vulkan --resolution 960x720 --script "$PWD/tools/test_mvp_controller_menus.gd"
+py -3 local/issue-1/controller_smoke.py
+```
+
 ## Be the Cop follow-up
 
 Ultimate Racer events 5, 9, 13, 18 and 27 use authored event kind 6. The

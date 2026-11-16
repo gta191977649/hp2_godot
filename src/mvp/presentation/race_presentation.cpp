@@ -43,6 +43,8 @@
 #include <godot_cpp/classes/compositor.hpp>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event.hpp>
+#include <godot_cpp/classes/input_event_joypad_button.hpp>
+#include <godot_cpp/classes/input_event_joypad_motion.hpp>
 #include <godot_cpp/classes/input_event_key.hpp>
 #include <godot_cpp/classes/input_event_mouse_motion.hpp>
 #include <godot_cpp/classes/label.hpp>
@@ -82,6 +84,7 @@ public:
     bool inRace{};
     bool menuInput{};
     bool inRaceMenuBack{};
+    bool replayInput{};
     bool demoInput{};
     bool beTheCop{};
     bool nativeDebug{};
@@ -91,15 +94,14 @@ public:
     ImGuiOverlay* debug{};
 #endif
     bool PollEvents() override {
-        if (nativeDebug) {
-            const auto pads = Input::get_singleton()->get_connected_joypads();
-            if (debugPad_ < 0 || !pads.has(debugPad_)) {
-                const int next = pads.is_empty() ? -1 : static_cast<int>(pads[0]);
-                if (debugPad_ != next) joystickNotifyNativeInputReset(0);
-                debugPad_ = next;
-            }
-        }
+        const auto pads = Input::get_singleton()->get_connected_joypads();
+        if (racePad_ < 0 || !pads.has(racePad_))
+            select_race_pad(pads.is_empty() ? -1 : static_cast<int>(pads[0]));
         return true;
+    }
+    void use_joypad(int device) {
+        if (device != racePad_ && Input::get_singleton()->get_connected_joypads().has(device))
+            select_race_pad(device);
     }
     int Width() const override { return root_.get_viewport()->get_visible_rect().size.x; }
     int Height() const override { return root_.get_viewport()->get_visible_rect().size.y; }
@@ -173,20 +175,37 @@ public:
             else if (inRaceMenuBack) submenuPauseHeld_ = true;
             // Keep a Back press from becoming a fresh Start edge on the parent screen.
             SetButton(pad, Ps2Button::Start, pause && !submenuPauseHeld_);
-            if (!inRace || menuInput || demoInput) {
+            if (!inRace || menuInput || replayInput || demoInput) {
                 policeSupportHeld_ = false;
                 nitroModifierHeld_ = false;
+                read_joypad(input, pad);
+                if (replayInput) {
+                    if (pressed("hp2_camera")) SetButton(pad, Ps2Button::Triangle, true);
+                    if (pressed("hp2_horn")) SetButton(pad, Ps2Button::Circle, true);
+                    if (pressed("hp2_handbrake")) SetButton(pad, Ps2Button::Square, true);
+                    if (pressed("hp2_select")) SetButton(pad, Ps2Button::Select, true);
+                    // Replay recording and demo controls require the native debug flag.
+                    if (!nativeDebug) {
+                        SetButton(pad, Ps2Button::L2, false);
+                        SetButton(pad, Ps2Button::R2, false);
+                        SetButton(pad, Ps2Button::R1, false);
+                    }
+                } else {
+                    // Menu B is Back. The replay screen uses the original Circle action.
+                    SetButton(pad, Ps2Button::Circle, false);
+                }
                 constexpr std::array<Ps2Button, menuActions.size()> buttons{
                     Ps2Button::Cross, Ps2Button::Triangle, Ps2Button::Up, Ps2Button::Down,
                     Ps2Button::Left, Ps2Button::Right};
                 for (std::size_t i = 0; i < buttons.size(); ++i) {
                     const bool back = i == 1;
+                    if (back && replayInput) continue;
                     const bool down = pressed(menuActions[i]) || (back && inRaceMenuBack && pause);
                     if (!down) consumedMenuKeys[i] = false;
                     SetButton(pad, buttons[i], down && !consumedMenuKeys[i] &&
                         (!back || !inRace || demoInput || inRaceMenuBack));
                 }
-                if (scrollingCredits) SetButton(pad, Ps2Button::Square, pressed("hp2_credits_pause"));
+                if (scrollingCredits && pressed("hp2_handbrake")) SetButton(pad, Ps2Button::Square, true);
                 destination = NativeScannerControls(pad);
                 return 1;
             }
@@ -217,15 +236,13 @@ public:
             SetButton(pad, Ps2Button::R1, handbrake || (nitro && nitroModifierHeld_));
             SetButton(pad, Ps2Button::Select, pressed("hp2_select"));
             SetButton(pad, Ps2Button::R3, nitro);
-            if (nativeDebug) {
-                if (joystickNativeDebugCaption()) {
-                    SetButton(pad, Ps2Button::Up, pressed("hp2_menu_up"));
-                    SetButton(pad, Ps2Button::Down, pressed("hp2_menu_down"));
-                    SetButton(pad, Ps2Button::Left, pressed("hp2_menu_left"));
-                    SetButton(pad, Ps2Button::Right, pressed("hp2_menu_right"));
-                }
-                read_debug_pad(input, pad);
+            if (nativeDebug && joystickNativeDebugCaption()) {
+                SetButton(pad, Ps2Button::Up, pressed("hp2_menu_up"));
+                SetButton(pad, Ps2Button::Down, pressed("hp2_menu_down"));
+                SetButton(pad, Ps2Button::Left, pressed("hp2_menu_left"));
+                SetButton(pad, Ps2Button::Right, pressed("hp2_menu_right"));
             }
+            read_joypad(input, pad);
             nitroModifierHeld_ = nitro;
         }
         destination = NativeScannerControls(pad);
@@ -233,10 +250,15 @@ public:
     }
 
 private:
-    void read_debug_pad(const Input& input, ControllerState& pad) const {
-        if (debugPad_ < 0) return;
+    void select_race_pad(int device) {
+        if (nativeDebug && racePad_ != device) joystickNotifyNativeInputReset(0);
+        racePad_ = device;
+    }
+
+    void read_joypad(const Input& input, ControllerState& pad) const {
+        if (racePad_ < 0) return;
         constexpr std::pair<JoyButton, Ps2Button> buttons[]{
-            {JOY_BUTTON_BACK, Ps2Button::Select}, {JOY_BUTTON_START, Ps2Button::Start},
+            {JOY_BUTTON_BACK, Ps2Button::Select},
             {JOY_BUTTON_DPAD_UP, Ps2Button::Up}, {JOY_BUTTON_DPAD_RIGHT, Ps2Button::Right},
             {JOY_BUTTON_DPAD_DOWN, Ps2Button::Down}, {JOY_BUTTON_DPAD_LEFT, Ps2Button::Left},
             {JOY_BUTTON_A, Ps2Button::Cross}, {JOY_BUTTON_B, Ps2Button::Circle},
@@ -245,22 +267,22 @@ private:
             {JOY_BUTTON_LEFT_STICK, Ps2Button::L3}, {JOY_BUTTON_RIGHT_STICK, Ps2Button::R3},
         };
         for (const auto& [source, target] : buttons)
-            if (input.is_joy_button_pressed(debugPad_, source)) SetButton(pad, target, true);
+            if (input.is_joy_button_pressed(racePad_, source)) SetButton(pad, target, true);
         constexpr std::pair<JoyAxis, Ps2Button> triggers[]{
             {JOY_AXIS_TRIGGER_LEFT, Ps2Button::L2}, {JOY_AXIS_TRIGGER_RIGHT, Ps2Button::R2}};
         for (const auto& [source, target] : triggers) {
-            const auto strength = std::clamp(input.get_joy_axis(debugPad_, source), 0.0f, 1.0f);
+            const auto strength = std::clamp(input.get_joy_axis(racePad_, source), 0.0f, 1.0f);
             if (strength > 0.08f) SetButton(pad, target, true, static_cast<std::uint8_t>(strength * 255));
         }
         constexpr JoyAxis axes[]{JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y, JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y};
         for (std::size_t i = 0; i < pad.sticks.size(); ++i) {
             if (pad.sticks[i] != 128) continue;
-            const auto value = std::clamp(input.get_joy_axis(debugPad_, axes[i]), -1.0f, 1.0f);
+            const auto value = std::clamp(input.get_joy_axis(racePad_, axes[i]), -1.0f, 1.0f);
             if (std::abs(value) > 0.08f)
                 pad.sticks[i] = NormalizeAxis(static_cast<std::int16_t>(value * (value < 0 ? 32768 : 32767)));
         }
     }
-    int debugPad_{-1};
+    int racePad_{-1};
     bool submenuPauseHeld_{};
     Node3D& root_;
     bool policeSupportHeld_{};
@@ -572,6 +594,12 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
 #endif
     if (session_) {
         auto& s = *session_;
+        const Ref<InputEventJoypadButton> button = event;
+        const Ref<InputEventJoypadMotion> axis = event;
+        // Require a deliberate move before transferring control from another pad.
+        if ((button.is_valid() && button->is_pressed()) ||
+            (axis.is_valid() && std::abs(axis->get_axis_value()) >= 0.5f))
+            s.host.use_joypad(event->get_device());
         if (event->is_action_pressed("hp2_camera")) s.orbit.reset();
         if (event->is_action_pressed("hp2_pause")) s.orbit.capture(false);
         if (const Ref<InputEventMouseMotion> motion = event; motion.is_valid() &&
@@ -581,10 +609,10 @@ void RacePresentation::_input(const Ref<InputEvent>& event) {
         }
         if (!failed_ && key.is_valid() && s.nameEditSession) {
             using Action = FrontendNameEditAction;
-            constexpr std::array<std::pair<const char*, Action>,5> editActions{{
-                {"hp2_name_edit_left", Action::Left}, {"hp2_name_edit_right", Action::Right},
-                {"hp2_name_edit_backspace", Action::Backspace}, {"hp2_name_edit_delete", Action::Delete},
-                {"hp2_name_edit_commit", Action::Commit}}};
+            constexpr std::array<std::pair<const char*, Action>,6> editActions{{
+                {"hp2_menu_left", Action::Left}, {"hp2_menu_right", Action::Right},
+                {"hp2_menu_back", Action::Backspace}, {"hp2_name_edit_delete", Action::Delete},
+                {"hp2_menu_confirm", Action::Commit}, {"hp2_pause", Action::Commit}}};
             const auto binding = std::find_if(editActions.begin(), editActions.end(),
                 [&](const auto& entry) { return key->is_action(entry.first); });
             const auto character = key->get_unicode();
@@ -745,9 +773,10 @@ void RacePresentation::_process(double delta) {
         s.host.demoInput = race.sessionState == RC_STATE_AI_DEMO || race.sessionState == RC_STATE_REPLAY_DEMO;
         s.host.beTheCop = race.beTheCop;
         s.host.menuInput = state.screen && race.sessionState != RC_STATE_RACE_IN_PROGRESS;
+        s.host.replayInput = state.pointerReplay;
         // Race information pages and pause submenus use the source LeaveScreen input.
         // Open popups use it to cancel. The root Pause Menu and replay use Start.
-        s.host.inRaceMenuBack = s.host.menuInput && !state.pointerReplay &&
+        s.host.inRaceMenuBack = s.host.menuInput && !s.host.replayInput &&
             (race.sessionState == RC_STATE_CAMERA_FLYBY || race.sessionState == RC_STATE_PRE_RACE ||
              race.sessionState == RC_STATE_POST_RACE ||
              (race.sessionState == RC_STATE_PAUSE &&

@@ -220,7 +220,8 @@ func pause_menus() -> void:
     await round_trip(0, "Pause audio", "Pause Options")
     await round_trip(1, "Pause display", "Pause Options")
     await back("Pause Menu")
-    if OS.get_cmdline_user_args()[0].begins_with("--race-event="):
+    if Array(OS.get_cmdline_user_args()).any(func(argument: String) -> bool:
+        return argument.begins_with("--race-event=")):
         await round_trip(4, "Race Objective", "Pause Menu")
         await round_trip(5, "Pause BAC controls", "Pause Menu")
     if OS.get_cmdline_user_args().has("--debug"):
@@ -237,7 +238,7 @@ func pause_menus() -> void:
     await select(FIRST + 3)
     await key(KEY_ENTER)
     await wait_for(func(state: Dictionary) -> bool: return state.get("race_state", 0) == 4)
-    await key(KEY_BACKSPACE)
+    await key(KEY_ESCAPE)
     await wait_screen("Pause Menu")
     print("MENU_BACK_PASS Instant Replay -> Pause Menu")
     await key(KEY_ESCAPE)

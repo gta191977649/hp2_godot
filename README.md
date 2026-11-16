@@ -43,12 +43,20 @@ Enable **Options → Display → Subtitle** for English police radio captions du
 | --- | --- |
 | Navigate menus | Arrow keys |
 | Confirm / Go back | Enter / Backspace |
-| Accelerate, brake, and steer | WASD or arrow keys |
+| Accelerate, brake, and steer | WASD |
 | Handbrake / Change camera / Recover car | Space / C / Tab |
 | Shift gears / Look back / Horn | Q and E / Shift / H |
-| Pause a race | Esc or Backspace |
+| Pause a race | Esc |
 
-Menus also support a mouse and gamepad. Controller settings are available under **Options**.
+Menus also support a mouse and gamepad. With the default gamepad layout, use the
+left stick to steer, Cross (A) to accelerate, Square (X) to brake, R1 (RB) for the
+handbrake, and Start to pause. Press a button or move a stick to use a connected
+gamepad at any time. Keyboard controls are available throughout.
+Controller settings are available under **Options**.
+
+In Instant Replay, use Enter or Cross (A) to play or pause, Left/Right to
+jump between markers, C or Triangle (Y) to change camera, and Esc or Start
+to exit.
 
 ## Saves and troubleshooting
 
