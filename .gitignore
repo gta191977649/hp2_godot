@@ -315,6 +315,8 @@ saves/
 !/tools/test_mvp_reflection_performance.gd
 !/tools/test_mvp_starting_grid.gd
 !/tools/profile_mvp_reflections.py
+!/tools/profile_mvp_launch_smoke.py
+!/tools/test_mvp_launch_smoke.gd
 !/tools/test_mvp_wheel_blur.gd
 !/tools/test_mvp_track_viewer.gd
 !/tools/capture_mvp_track_scenery.gd

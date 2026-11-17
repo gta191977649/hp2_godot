@@ -15,6 +15,172 @@ particle passes. These PAL addresses are donor annotations. The exact PAL ELF
 hash for this donor remains unresolved. The historical Debug AcidFX ELF SHA-256
 is 815b60c7f4731ce982805a51fff23858c0ee85be4f6bd4faef5230567f332f1b.
 
+## Track 13 launch smoke performance
+
+The seeded Quick Race fixture holds the default accelerator from the countdown
+through five seconds after the session enters In Progress. This window starts
+during the countdown. It uses a disposable profile, the original grid
+and race, and model 35 with skin 2. Two `XETT_ROAD_SK` definitions draw during
+the launch. The Visual Profiler captures match render frames to source ticks.
+The diagnostic hide controls change render layers while the particle events and
+GPU simulation continue.
+
+Windows, Intel Arc B390, Godot 4.7.2 Release, Vulkan Forward+, FXAA, VSync off.
+GPU scope times below are P95 during tyre-active frames and include all viewports.
+
+| Diagnostic | 3D transparency | Update GPUParticles |
+| --- | ---: | ---: |
+| 2880×1695, original full quad | 9.070 ms | 0.039 ms |
+| 2880×1695, tyre draws hidden | 1.201 ms | 0.059 ms |
+| 2880×1695, exhaust hidden | 13.570 ms | 0.044 ms |
+| 1920×1080, trimmed tyre quads | 4.567 ms | 0.039 ms |
+| 1920×1080, tyre draws hidden | 0.635 ms | 0.059 ms |
+
+The large delta is in rasterized tyre-smoke coverage. Native whole-frame
+comparisons also varied with the cost of opaque rendering across launches.
+The separate exhaust run retained the transparency spikes. Particle history
+uploads and batch sizes were left alone.
+
+Godot now builds a cached alpha-support table for eligible road tyre
+atlases at scene preparation. For each atlas frame and alpha byte, the table
+bounds the texels that can pass, with padding for bilinear samples from adjacent
+cells. The shader reads the table using the particle's quantized tint and
+remaps quad positions and UVs together. Fragment sampling, alpha, priority and
+depth still use the original path. Unsupported atlas layouts, invalid frame
+indices, materials with other blend or alpha rules, motion, and game-core
+emission stay on their existing paths. The full-quad control flips only the
+trim uniform in the fixture.
+
+In a separate same-build Visual Profiler pair, full quads to trimmed quads
+changed transparent P95 from 7.798 to 7.250 ms and frame P95 from 13.159
+to 12.736 ms. The whole-frame peak remained in the third and fourth seconds.
+The following table gives the median of three alternated native runs per
+variant with the Visual Profiler off. Each run measures the live launch only.
+
+| Pacing and variant | Average FPS | Frame P50 / P95 / P99 |
+| --- | ---: | ---: |
+| Uncapped, full quads | 105.23 | 8.360 / 18.654 / 28.255 ms |
+| Uncapped, trimmed | 110.77 | 7.853 / 16.760 / 27.899 ms |
+| 120 Hz VSync, full quads | 106.03 | 8.434 / 14.270 / 21.336 ms |
+| 120 Hz VSync, trimmed | 103.66 | 8.426 / 14.367 / 21.307 ms |
+
+Neither 120 FPS gate passed. In the synchronized trimmed runs, 41–57 intervals
+per run reached 12.5 ms and 33–40 consecutive pairs missed. The worst trimmed
+interval was 29.439 ms uncapped and 23.661 ms synchronized. These are render-loop
+intervals. Matched-tick medians in the dense 2–4 s window favored trim in two of
+three uncapped pairs and one synchronized pair. The remaining cost is largely
+smoke that still contributes to the image, plus the rest of the race scene.
+
+At session ticks 196 and 251, fixed-scene captures compared both paths and a
+tyre-hidden control. At the heavier pose, hiding tyres changed 2,138,093
+main-view pixels by more than one RGB level. Switching the trim changed one
+main-view pixel by more than one RGB level, with a maximum error of 2/255.
+At the second pose the count was five, with a maximum of 5/255. The rear view
+had eight and four pixels above one level, with maxima of 5/255 and 3/255.
+These measurements cover the PC port.
+
+The native timing captures preceded a final guard for out-of-range frame
+indices and the existing particle-baseline diagnostic. Raw traces and captures
+are under `local/task0140-launch-*`. A final Visual Profiler pair with the
+guard in place measured transparency P95 at 8.264 ms full-quad and 8.016 ms
+trimmed, with whole-frame P95 at 13.845 and 13.554 ms. The first fixture
+attempt filtered by definition key alone and missed the target. The corrected
+fixture matches the authored group metadata and sends the mapped physical key.
+
+Debug and Release staging passed. The final Release shader passed the
+Track 13 D3D12 capture at 1080p. The full-quad comparison had four main-view
+pixels and five rear-view pixels more than one RGB level apart, with maxima
+of 3/255 and 2/255. Vulkan Release passed Track 13 pause/resume, restart and
+scene retirement, and reached replay epoch 2 after the seek. Replay verification
+covered scene and replay state.
+Track 12 Release terrain effects changed 1,131 pixels. The forest fixture
+timed out when first run in Release because its camera fixture is Debug-only.
+It passed in Debug with 46,504 changed samples and all 128 particle node IDs
+reused. The Vulkan Release showroom resize check passed with 2,827 nebula
+samples. The regression logs are in `local/task0140-launch-checks`.
+
+```powershell
+$iso = 'D:/ps2_game/Need for Speed - Hot Pursuit 2 (USA).iso'
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
+cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-visual normal no-tyre no-exhaust
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-1080 --resolution 1920x1080 normal no-tyre
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-uncapped --quiet --repeats 3 full-quad normal
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-sync --quiet --vsync --repeats 3 full-quad normal
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-peak --capture-tick 196 normal
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-fade --capture-tick 251 normal
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-d3d12 --driver d3d12 --resolution 1920x1080 --capture-tick 196 normal
+```
+
+### Remaining overdraw at native resolution
+
+Added a held-pose mode to the launch fixture. It stops race updates at the
+requested launch tick, warms for 36 draws and captures 240 render intervals
+with Godot's Visual Profiler. At session tick 196, the original and
+tyre-hidden Vulkan runs measured P95 GPU transparency of 8.852 and 0.585 ms.
+Their whole-GPU P95 times were 14.457 and 5.195 ms. Those launches reached
+slightly different simulation steps, so a separate one-process experiment
+switched shaders and draw layers on the same pose.
+
+Each one-process row covers 120 Visual Profiler frames after 32 warmup draws
+at 2880×1695, FXAA, on the Arc B390 with Vulkan Forward+. The four authored
+windows bracket the trial variants. The main scene viewport alone accounts
+for about 9.3 ms of the authored transparency P95.
+
+| Fixed-pose draw | Transparent GPU P95 | Whole GPU P95 |
+| --- | ---: | ---: |
+| Authored, four windows | 9.535–9.627 ms | 13.040–13.656 ms |
+| Constant RGB with authored sampling, alpha and discard | 8.193 ms | 11.811 ms |
+| Constant RGB and opacity over the trimmed geometry | 7.602 ms | 11.309 ms |
+| Zero alpha for rejected pixels, with no fragment discard | 10.999 ms | 15.012 ms |
+| Tyre draws hidden | 0.461 ms | 4.279 ms |
+
+Skipping color calculations saved about 1.35 ms at this pose. Simplifying
+the fragment shader and keeping all the trimmed geometry on screen still
+exceeded 8.33 ms. The constant-opacity control writes blends across the
+trimmed quad and can cover pixels the authored shader discards, so its
+timing describes that workload. There is also limited empty space left
+inside the trimmed smoke geometry. For the captured 4×4 atlas, four
+conservative bands saved about 7% of its low-alpha support area relative
+to one bounding box, before accounting for extra triangles. Changing
+fragment rejection to zero alpha increased work in the measured pose.
+The experimental shaders stayed in the local diagnostic project. The
+production renderer continues to use the authored smoke shader and
+the existing conservative bounds.
+
+During live launches at the same size, D3D12 Visual Profiler transparency
+P95 was 6.909 ms with smoke and 0.624 ms with tyre draws hidden.
+Whole-frame P95 was 12.732 and 9.102 ms in those runs. A quiet Vulkan launch
+with tyre draws hidden reached 7.470 ms P95 and 8.369 ms P99.
+
+Separate uninstrumented 120 Hz VSync runs with authored smoke missed the gate
+on both drivers. Vulkan averaged 100.48 FPS with frame P95/P99 of
+16.991/19.779 ms. D3D12 averaged 106.21 FPS with P95/P99 of 16.224/21.978 ms.
+These are render-loop timings for one launch per driver.
+
+With tyre draws hidden, a separate uninstrumented Vulkan 120 Hz run
+averaged 119.04 FPS with P95/P99 of 9.666/11.730 ms. Five of 593 intervals
+reached 12.5 ms and the maximum was 28.136 ms. The repeatable countdown
+handoff hitch appears at session ticks 161–162, about 2.7 seconds into the
+window, while the committed simulation is still at step 1. A Vulkan
+uncapped phase trace measured 12.772 ms there, with 10.572 ms before
+`frame_pre_draw` and 2.102 ms between the draw callbacks. Two canvas
+pipeline compilations were reported on that frame. The phase trace
+isolates most of this hitch before drawing. The counters do not measure
+how much of the interval was spent compiling.
+
+Profiler traces, the fixed-pose shader trials and RGB/alpha atlas inspection
+are under `local/task0140-smoke-*`. The in-repository fixture reproduces
+the live and held authored versus hidden captures.
+
+```powershell
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-held --hold-tick 196 normal no-tyre
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-d3d12-visual --driver d3d12 normal no-tyre
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-vulkan-sync --quiet --vsync normal
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-d3d12-sync --driver d3d12 --quiet --vsync normal
+py -3 -B tools/profile_mvp_launch_smoke.py --assets $iso --out local/launch-no-tyre-sync --quiet --vsync no-tyre
+```
+
 ## Acceptance
 
 - [x] Original particle births and lifetime reach Godot GPU effects.

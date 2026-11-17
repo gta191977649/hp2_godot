@@ -11,6 +11,10 @@ uniform bool nearest_minification;
 uniform int texture_function;
 uniform sampler2D group_epochs : filter_nearest, repeat_disable;
 uniform bool particle_baseline;
+#ifdef PARTICLE_MIX
+uniform sampler2D tyre_atlas_bounds : filter_nearest, repeat_disable;
+uniform bool trim_tyre_quad;
+#endif
 varying vec4 tint;
 varying flat float visible_in_view;
 
@@ -39,9 +43,22 @@ void vertex() {
         vec4 shape = ((size_curve[0] * age + size_curve[1]) * age + size_curve[2]) * age + size_curve[3];
         tint = floor(clamp(((color_curve[0] * age + color_curve[1]) * age + color_curve[2]) * age + color_curve[3],
                      vec4(0.0), vec4(255.0)));
+        int frame = int(INSTANCE_CUSTOM.z) & 255;
+        vec2 local_position = VERTEX.xy;
+#ifdef PARTICLE_MIX
+        if (trim_tyre_quad && !particle_baseline && tint.a > 0.0 && float(frame) < atlas_size.x * atlas_size.y) {
+            // Bilinear interpolation cannot exceed the largest contributing
+            // alpha. Round the required byte down before looking up its bounds.
+            int minimum_alpha = clamp(((alpha_test ? 49 : 1) * 128 - 1) / int(tint.a), 1, 255);
+            vec4 bounds = texelFetch(tyre_atlas_bounds, ivec2(frame, minimum_alpha), 0);
+            local_position = local_position * (bounds.zw - bounds.xy) +
+                (bounds.xy + bounds.zw - vec2(1.0)) * vec2(0.5, -0.5);
+            UV = mix(bounds.xy, bounds.zw, UV);
+        }
+#endif
         int angle = int(INSTANCE_CUSTOM.y) & 65535;
         float rotation = float(angle + (((angle & 1) == 0) ? int(shape.y) : -int(shape.y))) * TAU / 65536.0;
-        vec2 offset = mat2(vec2(cos(rotation), sin(rotation)), vec2(-sin(rotation), cos(rotation))) * VERTEX.xy;
+        vec2 offset = mat2(vec2(cos(rotation), sin(rotation)), vec2(-sin(rotation), cos(rotation))) * local_position;
         // Forward+ may flip the projection Y axis for a render target. Its
         // magnitude sets the focal length; using the sign collapses large FX.
         float focal = preview_focal > 0.0 ? preview_focal : 240.0 * abs(PROJECTION_MATRIX[1][1]);
@@ -57,8 +74,7 @@ void vertex() {
         MODELVIEW_MATRIX = mat4(vec4(1.0, 0.0, 0.0, 0.0), vec4(0.0, 1.0, 0.0, 0.0),
             vec4(0.0, 0.0, 1.0, 0.0), center);
         VERTEX = vec3(offset * (particle_baseline || alpha_can_pass ? size : 0.0) * vec2(1.0, 0.875), 0.0);
-        float frame = float(int(INSTANCE_CUSTOM.z) & 255);
-        UV = (UV + vec2(mod(frame, atlas_size.x), floor(frame / atlas_size.x))) / atlas_size;
+        UV = (UV + vec2(mod(float(frame), atlas_size.x), floor(float(frame) / atlas_size.x))) / atlas_size;
     }
 }
 
