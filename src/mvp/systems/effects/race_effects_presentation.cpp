@@ -125,6 +125,7 @@ struct RaceEffectsPresentation::Storage {
         load_shader("res://shader/light_flare_sub.gdshader")};
     Ref<Shader> sunShader=load_shader("res://shader/sun_occlusion.gdshader");
     std::unordered_map<const EditorMarkerTexture*,Ref<Texture2D>> textures, rawTextures;
+    std::map<std::tuple<const EditorMarkerTexture*, int, int>, Ref<ImageTexture>> tyreAtlasBounds;
     std::unordered_map<const EditorMarkerTexture*,Ref<StandardMaterial3D>> skidMaterials;
     struct ShadowBatch {
         MeshInstance3D* node{};
@@ -222,6 +223,61 @@ struct RaceEffectsPresentation::Storage {
         const Vector2 start = (Vector2(first)-Vector2(0.5,0.5)).max(Vector2()) / size;
         const Vector2 end = (Vector2(last)+Vector2(1.5,1.5)).min(size) / size;
         return {start,end-start};
+    }
+
+    Ref<ImageTexture> tyre_atlas_bounds(const EditorMarkerTexture& descriptor, int columns, int rows) {
+        auto [cached, inserted] = tyreAtlasBounds.try_emplace({&descriptor, columns, rows});
+        if (!inserted) return cached->second;
+        const auto* source = textureInfoForDescriptor(&descriptor);
+        std::uint32_t width{}, height{};
+        const auto rgba = DecodeTextureMipRgba(*source, 0, 0, source->pixels.size, width, height);
+        if (width == 0 || height == 0 || width % columns != 0 || height % rows != 0)
+            return {};
+
+        constexpr int levels = 256;
+        const int frames = columns * rows;
+        const int cellWidth = width / columns;
+        const int cellHeight = height / rows;
+        const Vector2 cellSize(cellWidth, cellHeight);
+        std::vector<std::array<float, 4>> bounds(frames * levels);
+        bool cropped = false;
+        for (int frame = 0; frame < frames; ++frame) {
+            const int left = (frame % columns) * cellWidth;
+            const int top = (frame / columns) * cellHeight;
+            std::array<Rect2, levels> byAlpha{};
+            // Bilinear samples at the frame border can include adjacent atlas
+            // cells. Include those texels and round their influence outward.
+            for (int y = std::max(0, top - 1); y < std::min<int>(height, top + cellHeight + 1); ++y) {
+                for (int x = std::max(0, left - 1); x < std::min<int>(width, left + cellWidth + 1); ++x) {
+                    const int alpha = rgba[(y * width + x) * 4 + 3];
+                    if (alpha == 0) continue;
+                    const Vector2 texel(x - left, y - top);
+                    const Vector2 start = (texel - Vector2(1, 1)).max(Vector2());
+                    const Vector2 end = (texel + Vector2(2, 2)).min(cellSize);
+                    const Rect2 support(start, end - start);
+                    auto& area = byAlpha[alpha];
+                    area = area.has_area() ? area.merge(support) : support;
+                }
+            }
+            Rect2 visible;
+            for (int alpha = levels - 1; alpha >= 1; --alpha) {
+                const Rect2& area = byAlpha[alpha];
+                if (area.has_area()) visible = visible.has_area() ? visible.merge(area) : area;
+                const Vector2 start = visible.position / cellSize;
+                const Vector2 end = visible.get_end() / cellSize;
+                bounds[alpha * frames + frame] = {start.x, start.y, end.x, end.y};
+                cropped |= visible.size != cellSize;
+            }
+            bounds[frame] = bounds[frames + frame];
+        }
+        if (cropped) {
+            PackedByteArray bytes;
+            bytes.resize(bounds.size() * sizeof(bounds.front()));
+            std::memcpy(bytes.ptrw(), bounds.data(), bytes.size());
+            cached->second = ImageTexture::create_from_image(
+                Image::create_from_data(frames, levels, false, Image::FORMAT_RGBAF, bytes));
+        }
+        return cached->second;
     }
 
     void add_sun_region(Rect2 rect) {
@@ -427,6 +483,18 @@ struct RaceEffectsPresentation::Storage {
         draw->set_shader_parameter("texture_function",wire[0x4e]);
         draw->set_shader_parameter("group_epochs",epochTexture);
         draw->set_shader_parameter("particle_baseline",profile_baseline_particle_draw());
+        // Restrict the alpha bounds to the stock road-tyre modulation effects.
+        const auto groupKey = definition.groupKey;
+        if (!cutout && wire[0x4e] == 0 && texture_blend(descriptor) == BaseMaterial3D::BLEND_MODE_MIX &&
+            (groupKey == hashString("XETT_ROAD_SK") || groupKey == hashString("XETT_ROAD_SP") ||
+             groupKey == hashString("XEBO_ROAD"))) {
+            const auto bounds = tyre_atlas_bounds(descriptor, 1 << definition.atlasWidthPower,
+                1 << definition.atlasHeightPower);
+            if (bounds.is_valid()) {
+                draw->set_shader_parameter("tyre_atlas_bounds", bounds);
+                draw->set_shader_parameter("trim_tyre_quad", true);
+            }
+        }
         auto* node=memnew(GPUParticles3D);
         particle.node=node;
         node->set_meta("source_effect_group", static_cast<std::int64_t>(definition.groupKey));
