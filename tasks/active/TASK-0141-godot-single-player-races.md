@@ -466,6 +466,63 @@ ended at the user's request. Driving vibration, other layouts and modes, and
 physical DualShock 3 behavior remain unverified in this run. Local trace
 `local/rumble-validation/single-race-final.log`.
 
+## Issue #4 analog trigger layout
+
+Options → Controls → Controller Settings → Controller Layout offers Layout E.
+R2 is analog throttle and L2 is analog brake/reverse. The right stick
+remains available. Cross and Square shift up and down in manual mode.
+The native automatic routing and Triangle chords use those face buttons
+for zone cameras or police support. Restore Defaults selects Layout A.
+
+The Godot host already forwards both trigger pressure bytes to the native
+scanner. The existing profile layout field and original menu provide the
+selection and persistence. Game-core integration adds port-side layout ID
+34 to the scanner and profile validator and reuses the Layout A controller
+art in the picker. The new rows send direct pedal events so the original
+face-button throttle amplification does not saturate a partial trigger pull.
+
+The existing mapping reference is the final PAL scanner table at
+`0x002DC500` and device table at `0x002DE558`. The exact donor ELF SHA-256
+remains unresolved. Layout E is a port addition, informed by Silent's
+trigger layout patch as used by `nfshp2-port-win` at
+`8ae05937be6865dde1e45c108cecd79f247d6b7a`. It has no original-game
+equivalence claim.
+
+### Verification
+
+```powershell
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
+cmake --build --preset godot-mvp-debug --target hp2_blackbox --parallel 8
+$env:HP2_MVP_CONTROLS_TRIGGERS = '1'
+& $engine --path $project --rendering-driver vulkan --script "$PWD/tools/test_mvp_controls_settings.gd"
+$env:HP2_MVP_CONTROLS_RELOAD = '1'
+& $engine --path $project --rendering-driver vulkan --script "$PWD/tools/test_mvp_controls_settings.gd"
+$env:HP2_MVP_TEST_PAD_LAYOUT = '4'
+$env:HP2_MVP_SKIP_PAD_RECOVERY = '1'
+& $engine --path $raceProject --rendering-driver vulkan --script "$PWD/tools/test_mvp_control_layout_race.gd"
+```
+
+Use a disposable project with one named profile for the two menu launches.
+The race smoke uses a separate disposable profile with Layout E and the
+swapped keyboard bindings and stick settings described above. The A and C
+regressions use the same smoke with layout indices `0` and `2`. Recovery
+is skipped because the prior TASK-0141 fixture already recorded a failing
+Select recovery check.
+
+Windows Release staging and the Debug extension build passed. Debug staging
+could not replace the DLL in the shared staged project. Both Layout E menu
+runs passed with a ViGEm Xbox 360 controller. The picker screenshot shows the
+pedal, shift, and camera glyphs. The second launch loaded the saved Layout E
+and Restore Defaults wrote Layout A.
+
+The Track 24 race passed partial and full trigger pulls, release, reverse
+selection, keyboard/controller takeover, both zone camera chords and manual
+shifts. The Layout A and C regression runs passed. A local scanner smoke
+checked both police support chords and confirmed that pedal pulls do not
+produce their events. Live police support activation and a physical controller
+remain unverified for Layout E. Logs and the picker capture are under
+`local/layout-e-*`.
+
 ## Remaining work
 
 Complete each event to its donor-defined result. Check multi-leg

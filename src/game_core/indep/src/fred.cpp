@@ -1793,11 +1793,12 @@ struct FrontendProfileStream {
             "Saved music navigation index exceeds its original backing array");
     }
     void Joysticks(FrontendPlayerManager& f) {
-        constexpr std::array<std::int32_t,16> allowed{{0,10,11,12,13,20,21,22,23,30,31,32,33,40,50,51}};
+        constexpr std::array<std::int32_t,17> allowed{{
+            0,10,11,12,13,20,21,22,23,30,31,32,33,kPortTriggerGamepadLayout,40,50,51}};
         Array("joystick_configurations",f.joystickConfigurations.size());
         for(auto& configuration:f.joystickConfigurations) {
             const auto value=Scalar(nullptr,configuration);
-            ProfileCheck(std::find(allowed.begin(),allowed.end(),value)!=allowed.end(),"Saved joystick configuration is outside the original supported IDs");
+            ProfileCheck(std::find(allowed.begin(),allowed.end(),value)!=allowed.end(),"Saved joystick configuration is outside the supported IDs");
         }End();
     }
 };

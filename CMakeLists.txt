@@ -66,6 +66,7 @@ add_library(hp2_blackbox SHARED
   src/mvp/presentation/race_presentation.cpp
   src/mvp/assets/mesh_converter.cpp
   src/mvp/assets/race_diagnostics.cpp
+  src/mvp/assets/race_physics_probe.cpp
   src/mvp/systems/audio/godot_speech_output.cpp
   src/mvp/systems/audio/godot_audio_device.cpp
   src/mvp/systems/frontend/frontend_presentation.cpp

@@ -4,6 +4,7 @@ var checking := false
 var device := -1
 var layout := OS.get_environment("HP2_MVP_TEST_PAD_LAYOUT").to_int() if OS.has_environment("HP2_MVP_TEST_PAD_LAYOUT") else 2
 var test_rumble := OS.get_environment("HP2_MVP_TEST_PAD_RUMBLE") == "1"
+var skip_recovery := OS.get_environment("HP2_MVP_SKIP_PAD_RECOVERY") == "1"
 var failed_controls: Array[String] = []
 
 func _initialize() -> void:
@@ -46,6 +47,13 @@ func set_stick(value: float, axis := JOY_AXIS_LEFT_X) -> void:
     event.axis = axis
     event.axis_value = value
     Input.parse_input_event(event)
+
+func set_pedal(throttle: bool, amount: float) -> void:
+    if layout == 4:
+        set_stick(amount, JOY_AXIS_TRIGGER_RIGHT if throttle else JOY_AXIS_TRIGGER_LEFT)
+    else:
+        var button := JOY_BUTTON_X if throttle == (layout >= 2) else JOY_BUTTON_A
+        set_button(button, amount > 0.0)
 
 func check_input(label: String, throttle: float, brake: float, steer: float) -> void:
     var until := Time.get_ticks_msec() + 4000
@@ -90,6 +98,34 @@ func select_row(id: int) -> bool:
                 break
     return not _fail("could not select menu row %x" % id)
 
+func verify_trigger_shortcuts() -> bool:
+    set_pedal(true, 1.0)
+    if not await expect_state("moving before the zone camera check", func(s): return s.get("speed", 0.0) > 5.0):
+        return false
+    set_pedal(true, 0.0)
+    set_button(JOY_BUTTON_Y, true)
+    await create_timer(0.13).timeout
+    set_pedal(true, 0.5)
+    set_pedal(false, 0.5)
+    await create_timer(0.15).timeout
+    set_pedal(true, 0.0)
+    set_pedal(false, 0.0)
+    if race.telemetry().controls_camera_state != 0:
+        return not _fail("Triangle plus a pedal activated a zone camera")
+    await tap_button(JOY_BUTTON_X)
+    set_button(JOY_BUTTON_Y, false)
+    if not await expect_state("Triangle + Square starts Zone Freeze", func(s): return s.controls_camera_state == 1):
+        return false
+    if not await expect_state("Zone Freeze returns to driving", func(s): return s.controls_camera_state == 0, 9000):
+        return false
+    set_button(JOY_BUTTON_Y, true)
+    await create_timer(0.13).timeout
+    await tap_button(JOY_BUTTON_A)
+    set_button(JOY_BUTTON_Y, false)
+    if not await expect_state("Triangle + Cross starts Zone Zoom", func(s): return s.controls_camera_state == 2):
+        return false
+    return await expect_state("Zone Zoom returns to driving", func(s): return s.controls_camera_state == 0, 9000)
+
 func verify_race_controls() -> void:
     if not await verify_switching():
         return
@@ -115,7 +151,7 @@ func verify_vibration_preview() -> bool:
 func verify_switching() -> bool:
     var pads := Input.get_connected_joypads()
     if pads.is_empty():
-        _fail("Connect a gamepad and seed an isolated profile with Layout C and swapped Up/Down")
+        _fail("Connect a gamepad and seed a disposable profile with the requested layout and swapped Up/Down")
         return false
     device = pads[0]
     _key(KEY_DOWN, true)
@@ -141,13 +177,24 @@ func verify_switching() -> bool:
     if not await expect_state("left steering", func(s): return s.controls_steering > 0.4):
         return false
     set_stick(0.0)
-    var brake := JOY_BUTTON_A if layout >= 2 else JOY_BUTTON_X
-    var throttle := JOY_BUTTON_X if layout >= 2 else JOY_BUTTON_A
-    set_button(brake, true)
-    await check_input("Layout %s face button brakes" % layout, 0.0, 1.0, 0.0)
-    set_button(brake, false)
-    set_button(throttle, true)
-    await check_input("Layout %s face button accelerates" % layout, 1.0, 0.0, 0.0)
+    if layout == 4:
+        set_pedal(false, 0.5)
+        await check_input("partial LT brakes", 0.0, 0.5, 0.0)
+        set_pedal(false, 0.0)
+        await check_input("LT release clears brake", 0.0, 0.0, 0.0)
+        set_pedal(false, 1.0)
+        if not await expect_state("LT requests reverse from rest", func(s): return s.controls_gear_request == 0):
+            return false
+        set_pedal(false, 0.0)
+        set_pedal(true, 0.5)
+        await check_input("partial RT accelerates", 0.5, 0.0, 0.0)
+        set_pedal(true, 0.0)
+        await check_input("RT release clears throttle", 0.0, 0.0, 0.0)
+    set_pedal(false, 1.0)
+    await check_input("Layout %s full brake" % layout, 0.0, 1.0, 0.0)
+    set_pedal(false, 0.0)
+    set_pedal(true, 1.0)
+    await check_input("Layout %s full throttle" % layout, 1.0, 0.0, 0.0)
     set_stick(0.05)
     await check_input("stick dead zone", 1.0, 0.0, 0.0)
     set_stick(0.8)
@@ -160,7 +207,7 @@ func verify_switching() -> bool:
     if race.telemetry().get("controls_device") != "Keyboard":
         _fail("held stick retook control without crossing threshold")
         return false
-    set_button(throttle, false)
+    set_pedal(true, 0.0)
     set_stick(0.0)
     set_stick(-0.25, JOY_AXIS_RIGHT_Y)
     if not await expect_state("small right stick movement controls throttle", func(s):
@@ -201,6 +248,8 @@ func verify_switching() -> bool:
     await tap_button(JOY_BUTTON_DPAD_UP)
     if not await expect_state("cycle HUD", func(s): return s.controls_hud_profile != hud):
         return false
+    if layout == 4 and not await verify_trigger_shortcuts():
+        return false
     await tap_button(JOY_BUTTON_START)
     if not await expect_state("Start opens pause menu", func(s): return s.screen == "Pause Menu"):
         return false
@@ -223,20 +272,40 @@ func verify_switching() -> bool:
     if not await expect_state("resume in manual transmission", func(s): return s.race_state == 3 and not s.controls_automatic):
         return false
     var gear: int = race.telemetry().controls_gear_request
-    set_stick(0.8, JOY_AXIS_TRIGGER_RIGHT)
-    if not await expect_state("R2 shifts up", func(s): return s.controls_gear_request == gear + 1):
-        return false
-    set_stick(0.0, JOY_AXIS_TRIGGER_RIGHT)
-    set_stick(0.8, JOY_AXIS_TRIGGER_LEFT)
-    if not await expect_state("L2 shifts down", func(s): return s.controls_gear_request == gear):
-        return false
-    set_stick(0.0, JOY_AXIS_TRIGGER_LEFT)
-    var recovery_started: int = race.telemetry().controls_recovery_started
-    await tap_button(JOY_BUTTON_BACK)
-    if not await expect_state("Select resets the car", func(s): return s.controls_recovery_started > recovery_started):
-        return false
+    if layout == 4:
+        set_pedal(true, 1.0)
+        await check_input("RT accelerates in manual mode", 1.0, 0.0, 0.0)
+        if not await expect_state("moving forward before the manual brake check", func(s): return s.get("speed", 0.0) > 4.0):
+            return false
+        set_pedal(true, 0.0)
+        set_pedal(false, 1.0)
+        await check_input("LT brakes in manual mode", 0.0, 1.0, 0.0)
+        set_pedal(false, 0.0)
+        await check_input("manual pedals release", 0.0, 0.0, 0.0)
+        if race.telemetry().controls_gear_request != gear:
+            return not _fail("trigger pedals changed the requested gear")
+        await tap_button(JOY_BUTTON_A)
+        if not await expect_state("Cross shifts up", func(s): return s.controls_gear_request == gear + 1):
+            return false
+        await tap_button(JOY_BUTTON_X)
+        if not await expect_state("Square shifts down", func(s): return s.controls_gear_request == gear):
+            return false
+    else:
+        set_stick(0.8, JOY_AXIS_TRIGGER_RIGHT)
+        if not await expect_state("R2 shifts up", func(s): return s.controls_gear_request == gear + 1):
+            return false
+        set_stick(0.0, JOY_AXIS_TRIGGER_RIGHT)
+        set_stick(0.8, JOY_AXIS_TRIGGER_LEFT)
+        if not await expect_state("L2 shifts down", func(s): return s.controls_gear_request == gear):
+            return false
+        set_stick(0.0, JOY_AXIS_TRIGGER_LEFT)
+    if not skip_recovery:
+        var recovery_started: int = race.telemetry().controls_recovery_started
+        await tap_button(JOY_BUTTON_BACK)
+        if not await expect_state("Select resets the car", func(s): return s.controls_recovery_started > recovery_started):
+            return false
     if test_rumble:
-        set_button(throttle, true)
+        set_pedal(true, 1.0)
         set_stick(0.7)
         if not await expect_state("driving triggers original rumble", func(_s):
             return Input.get_joy_vibration_strength(device) != Vector2.ZERO, 20000):
@@ -246,6 +315,6 @@ func verify_switching() -> bool:
             func(_s): return Input.get_joy_vibration_strength(device) == Vector2.ZERO):
             return false
         _key(KEY_DOWN, false)
-        set_button(throttle, false)
+        set_pedal(true, 0.0)
         set_stick(0.0)
     return true

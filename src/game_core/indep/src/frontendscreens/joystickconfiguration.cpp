@@ -104,6 +104,8 @@ void ResetCurrentMenus(MainMenuScreenServices& s)
 }
 void ControllerPicture(MainMenuScreenServices& s,std::uint32_t screen,std::int32_t configuration)
 {
+    // The port-side trigger layout uses the authored Layout A controller artwork.
+    if(configuration==kPortTriggerGamepadLayout)configuration=30;
     std::array<char,32> name{};std::snprintf(name.data(),name.size(),"CONTROLLER%d",configuration);
     if(auto* image=Bitmap(s,screen,0x0b2ad6dfu))image->ChangeTexture(hashString(name.data()));
 }

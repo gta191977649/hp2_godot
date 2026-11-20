@@ -263,6 +263,10 @@ public:
     virtual bool WaitForSourceRefresh(std::uint32_t frameStart);
     virtual int32_t ReadInput(int32_t port,JoystickControls& destination)=0;
     virtual PortInputEdges TakePortInputEdges() {return {};}
+    // Port-side lifecycle hooks. The view is borrowed for this call only.
+    // Called before live input and after a successful World update, including catch-up.
+    virtual void BeforeWorldStep(const WorldSimulation&) {}
+    virtual void AfterWorldStep(const WorldSimulation&) {}
     virtual void SetRumble(int32_t port,uint8_t small,uint8_t large)=0;
     virtual void SubmitFrame(EcstasyFrame& frame)=0;
     // Physical renderer observations only. CPU-only hosts expose no GPU

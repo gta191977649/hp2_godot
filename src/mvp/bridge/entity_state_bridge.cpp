@@ -67,7 +67,9 @@ const EntityFrame& EntityStateBridge::stage(const RaceStateView& race) {
     if (race.rearCamera)
         frame.rearCamera = capture_camera(*race.rearCamera, 64.0f / (512.0f * 1.08f));
 
-    frame.step = world->frameCounter;
+    // World.frameCounter also advances during AI collision prediction and
+    // can stay constant with a single human car. Use the committed World clock.
+    frame.step = static_cast<std::uint32_t>(simulation->clock->worldLoopCounter) + 1;
     frame.generation = world->presentationGeneration;
     frame.replayEpoch = world->presentationReplayEpoch;
     frame.track = race.track;

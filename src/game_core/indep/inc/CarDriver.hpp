@@ -13,7 +13,8 @@ extern "C" {
 #endif
 
 enum { JOYSTICK_PORT_COUNT = 2, JOYSTICK_SAMPLES = 32,
-    JOYSTICK_PROFILE_DISCONNECTED = -1, JOYSTICK_PROFILE_GAMEPAD = 0x79 };
+    JOYSTICK_PROFILE_DISCONNECTED = -1, JOYSTICK_PROFILE_GAMEPAD = 0x79,
+    kPortTriggerGamepadLayout = 34 };
 
 typedef struct JoystickControls {
     uint16_t held;                 /* One logical bit means pressed. */

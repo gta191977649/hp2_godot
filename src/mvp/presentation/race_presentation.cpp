@@ -4,6 +4,7 @@
 #include "addon/subtitles/police_subtitles.hpp"
 #include "assets/port_credit.hpp"
 #include "assets/race_diagnostics.hpp"
+#include "assets/race_physics_probe.hpp"
 #include "bridge/entity_state_bridge.hpp"
 #ifdef HP2_MVP_IMGUI
 #include "assets/frontend_debug_menu.hpp"
@@ -101,6 +102,7 @@ public:
     bool scrollingCredits{};
     ControlSettings* controlSettings{};
     ControlsMenu* controlsMenu{};
+    RacePhysicsProbe physicsProbe;
     std::array<bool, menuActions.size()> consumedMenuKeys{};
 #ifdef HP2_MVP_IMGUI
     ImGuiOverlay* debug{};
@@ -266,9 +268,20 @@ public:
         }
     }
     PortInputEdges portInputEdges{};
+    void BeforeWorldStep(const WorldSimulation& world) override {
+        if (physicsProbe.enabled()) physicsProbe.before_step(world);
+    }
+    void AfterWorldStep(const WorldSimulation& world) override {
+        if (physicsProbe.enabled()) physicsProbe.after_step(world);
+    }
     int32_t ReadInput(int32_t port, JoystickControls& destination) override {
         ControllerState pad;
         if (port == 0) {
+            if (physicsProbe.read_input(pad)) {
+                destination = NativeScannerControls(pad);
+                destination.portConfiguration = 30;
+                return 1;
+            }
             pad.connected = true;
             if (controlsMenu && controlsMenu->capturing()) {
                 destination = NativeScannerControls(pad);
@@ -641,6 +654,7 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
         (void)returnToMenu;
 #endif
         configure_race_diagnostics(nativeDebug_, unlockRaces, isolatedProfile_);
+        session_->host.physicsProbe.configure(isolatedProfile_, track);
         set_process_input(true);
         stage = frontend ? "frontend_initialize" : "race_initialize";
         if (subtitleSetting_.is_valid()) session_->runtime.BindSubtitleSetting([](void* context, int action) {
@@ -670,6 +684,8 @@ bool RacePresentation::start(const String& assets, const String& profile, bool f
                 requireNamedProfile, controls);
 #endif
         }
+        else if (session_->host.physicsProbe.enabled())
+            session_->runtime.InitializeRace(RacePhysicsProbe::start_race, &session_->host.physicsProbe);
         else if (tree >= 0) session_->runtime.InitializeRace(start_campaign_race_diagnostic, &session_->campaignDiagnostic);
         else session_->runtime.InitializeRace(start_quick_race_diagnostic, &session_->requestedTrack);
         session_->frontendCanvas = memnew(Node2D);
@@ -1178,6 +1194,12 @@ void RacePresentation::_process(double delta) {
                 frame.track, static_cast<unsigned long long>(frame.generation), frame.step, s.placements,
                 s.vehicles.size(), static_cast<int>(frame.reverse), s.runtime.Frontend().gameType,
                 s.runtime.Frontend().selectedEventNumber);
+        if (s.host.physicsProbe.enabled() && playerState != frame.vehicles.end()) {
+            const auto visual = s.vehicles.find(playerState->handle);
+            if (visual != s.vehicles.end())
+                s.host.physicsProbe.render_sample(static_cast<unsigned>(clock.worldLoopCounter),
+                    *visual->second.root, *s.camera);
+        }
         s.bridge.publish();
     } catch (const std::exception& error) {
         fail(stage, error.what());
@@ -1226,6 +1248,10 @@ Dictionary RacePresentation::telemetry() const {
     }
 #endif
     if (!session_) return result;
+    if (session_->host.physicsProbe.enabled()) {
+        result["physics_probe_complete"] = session_->host.physicsProbe.complete();
+        result["physics_probe_ticks"] = session_->host.physicsProbe.ticks_written();
+    }
     const auto& frame = session_->bridge.current();
     if (session_->frontend) {
         result["game_type"] = session_->runtime.Frontend().gameType;

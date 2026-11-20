@@ -23,6 +23,83 @@
 
 ## Source timing evidence
 
+### 2026-11-18 high-speed steering and contact
+
+The current MVP supplies 60/3600 s to each normal live World update and
+uses the recorded intervals for replay. HP2FrameFix's PC version is a
+reference for independent presentation and simulation clocks. The PC
+ticker frequency does not establish a PS2 World interval.
+
+The first solo BMW M5 run exposed incorrect presentation identity. The
+old bridge used World.frameCounter, which can remain at 1 because the
+source advances it in AI collision prediction.
+The bridge now uses the committed World loop index, with the existing
+one-based presentation convention and replay restore epoch. Native
+World.frameCounter, tire and collision arithmetic, and race cadence
+remain under their source owners.
+
+The state-only runtime now offers two port-side, Godot-independent host
+callbacks around a live World transaction. The MVP needs this lifetime
+boundary to deliver scanner input and collect synchronous observations on
+every tick when one render callback runs multiple World updates. The
+existing render-time snapshot only exposes the last such update. The
+default callbacks are empty. The diagnostic runs only with an explicit
+trace path, `HP2_MVP_TEST_PROFILE=1` and `--race-track`. It starts a solo
+Quick Race through the original start handler, on the authored track and
+car definitions, from the grid with a fixed race seed. The fixture uses
+the original scanner, including its dead zone and hysteresis. A smaller
+raw pulse was filtered out, so the three-tick analog test uses 32 raw units.
+
+Every committed tick records the World interval, source time scale and Timer,
+nominal substep count (computed from the source maximum), last player
+wheel force interval, raw stick, processed steering, vehicle state,
+slip, and the count and summed impulse of the player's updated contact
+records. A separate presentation trace records the car and camera poses.
+
+Windows Godot 4.7.2 test results:
+
+| Case | Entry and committed samples | Successful checks |
+| --- | --- | --- |
+| BMW M5, track 33 | 40.05 m/s, 945 ticks | 30, 60, 120 and 144 FPS, jitter and 180 ms stall. Separate 30.06 m/s keyboard-equivalent pulse matched at 30 and 60 FPS. |
+| BMW M5, track 16 | 39.29 m/s, 1,900 ticks | 30 and 60 FPS. The response crossed an authored 0.4× slow-motion transition with 60 real-time quanta per tick. |
+| Lamborghini Murciélago, track 13 | 40.04 m/s, 462 ticks | 30, 60, 120 and 144 FPS, jitter and 180 ms stall. Separate right pulse, keyboard-equivalent pulse and wall graze also matched between caps. |
+| Lamborghini Murciélago, track 35 | 50.12 m/s, 1,648 ticks | 30, 60 and 144 FPS. |
+| Lotus Elise control, track 13 | 30.06 m/s, 472 ticks | 30, 60, 120 and 144 FPS, jitter and 180 ms stall. |
+
+The Murciélago's Vulkan window averaged 30.2, 60.0, 119.7 and 142.6 FPS
+in the final matrix. Its car heading matched the committed heading at
+corresponding presentation samples in the first window matrix. The
+injected stalls yielded observed gaps of 197.3 to 197.7 ms in the
+final runs. The largest yaw changes on the high-speed runs followed
+recorded body contact and were identical across display schedules.
+The Release race lifecycle passed pause, resume, restart and quit.
+The Debug mouse replay smoke passed live seek and resumed slow motion.
+The diagnostic refused to activate without the isolated-profile flag.
+
+```powershell
+cmake --build --preset godot-mvp-debug --target hp2_blackbox --parallel 7
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 7
+$engine = './local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe'
+$project = './build/godot-mvp-release/mvp-project'
+py -3 tools/test_mvp_race_physics.py --godot $engine --project $project --output local/physics-probe/m5 --track 33 --cars BMWM5 --speed 40 --headless
+py -3 tools/test_mvp_race_physics.py --godot $engine --project $project --output local/physics-probe/murcielago --track 13 --cars MURCIELAGO --speed 40
+py -3 tools/test_mvp_race_physics.py --godot $engine --project $project --output local/physics-probe/elise --track 13 --cars ELISE --speed 30 --headless
+py -3 tools/test_mvp_race_physics.py --godot $engine --project $project --output local/physics-probe/scale-m5 --track 16 --cars BMWM5 --speed 39 --distance 920 --schedules 30 60 --headless
+py -3 tools/test_mvp_race_physics.py --godot $engine --project $project --output local/physics-probe/speed50-lambo --track 35 --cars MURCIELAGO --speed 50 --schedules 30 60 144 --headless
+```
+
+The extracted US retail SLUS-20362 ELF SHA-256 is
+`7335b8ed479481082c648958f4b5be4da65b74d042d0ab2f5237df801eafacc2`.
+PCSX2 d75a0ad booted the retail disc with patch and cheat settings off.
+PINE corroborated the retail code words at `0x00137C88` and `0x00137D90`.
+The available save state had no active World at `0x00330288` and
+fresh boot yielded no matched race trace. The reported PS2 60 FPS patch,
+its exact speed/track/input reproduction, original-machine cadence and
+vehicle response comparison remain open. The measured traces establish
+render-rate independence for the sampled World fields and inputs.
+Open coverage includes physical-device sampling during catch-up, full
+multi-participant event ordering and per-retry collision substeps.
+
 ### TASK-0119 camera and collision follow-up
 
 The MVP still defaults to `source`. The player, wheels, driving camera,

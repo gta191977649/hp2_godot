@@ -1,6 +1,7 @@
 extends "test_mvp_menu_navigation.gd"
 
 var verify_reload := OS.get_environment("HP2_MVP_CONTROLS_RELOAD") == "1"
+var trigger_layout := OS.get_environment("HP2_MVP_CONTROLS_TRIGGERS") == "1"
 var device := -1
 var audio_mask_height := 0.0
 var audio_row_pitch := 0.0
@@ -141,6 +142,11 @@ func run() -> void:
         race = root.get_node_or_null("NativeGame/RacePresentation")
     if not Input.get_connected_joypads().is_empty():
         device = Input.get_connected_joypads()[0]
+    if trigger_layout:
+        await wait_for(func(state: Dictionary) -> bool:
+            return state.get("screen") in [TITLE, "Select Profile"])
+        if race.telemetry().get("screen") == "Select Profile":
+            await key(KEY_ENTER)
     await wait_screen(TITLE)
     await wait_for(func(state: Dictionary) -> bool: return state.get("video_request") == 2)
     await key(KEY_ENTER)
@@ -151,6 +157,9 @@ func run() -> void:
     await wait_screen(MAIN)
     await create_timer(0.8).timeout
     await visit(2, "Options")
+    if trigger_layout:
+        await verify_trigger_layout()
+        return
     if OS.get_environment("HP2_MVP_TEST_LANGUAGES_ONLY") == "1":
         await check_language_options()
         quit(0)
@@ -407,6 +416,37 @@ func run() -> void:
     if OS.get_environment("HP2_MVP_TEST_LANGUAGES") == "1":
         await check_language_options()
     print("HP2_CONTROLS_SETTINGS_PASS reload=", verify_reload)
+    quit(0)
+
+func verify_trigger_layout() -> void:
+    await visit(1, "Controls")
+    await select(row_id(1))
+    await key(KEY_ENTER)
+    await wait_screen("Controller Settings")
+    if verify_reload:
+        expect(profile().get("joystick_configurations", [0])[0] == 34, "Layout E did not survive restart")
+        await select(row_id(3))
+        await key(KEY_ENTER)
+        await wait_for(func(state: Dictionary) -> bool: return state.get("modal", false))
+        await key(KEY_LEFT)
+        await key(KEY_ENTER)
+        await wait_for(func(state: Dictionary) -> bool:
+            return state.get("screen") == "Controller Settings" and profile().get("joystick_configurations", [0])[0] == 30)
+    else:
+        await select(row_id(0))
+        await key(KEY_ENTER)
+        await wait_screen("Joystick PreConfig")
+        await key(KEY_ENTER)
+        await wait_screen("Joystick Config Port1")
+        await create_timer(0.5).timeout
+        await key(KEY_LEFT) # Wrap from A to E.
+        await capture("controller-layout-e")
+        await key(KEY_ENTER)
+        await wait_screen("Joystick PreConfig")
+        await back("Controller Settings")
+        await wait_for(func(_state: Dictionary) -> bool:
+            return profile().get("joystick_configurations", [0])[0] == 34)
+    print("HP2_TRIGGER_LAYOUT_MENU_PASS reload=", verify_reload)
     quit(0)
 
 func check_save_failure() -> void:

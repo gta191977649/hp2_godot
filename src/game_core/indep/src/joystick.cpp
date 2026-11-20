@@ -345,7 +345,8 @@ int32_t joystickGetUserConfiguration(const GameInputRouter* router,int32_t port)
     return InputPort(router,port)?router->userConfigurations[port]:0;
 }
 
-// Final PAL only:230 ScannerConfig lookup rows at2DC500 and7 type tables at2DE558.
+// Final PAL:230 ScannerConfig lookup rows at2DC500 and7 type tables at2DE558.
+// The port-side trigger layout extends the gamepad type.
 namespace {
 enum class ScannerKind { None,TypeChanged,AnyButton,DigitalDown,DigitalUpOrDown,DoublePress,Repeat,DigitalSteer,DigitalAnalog,Analog };
 struct ButtonMapping { int8_t configurations[8]; int32_t event; uint32_t button,shift; const char* name; ScannerKind scanner; uint8_t fields[8]; };
@@ -496,24 +497,34 @@ constexpr ButtonMapping buttonMappings[]{
     {{0,21,0,23,0,0,0,0},126,139,0,"R1",ScannerKind::DigitalUpOrDown,{1,0,27,28,0,0,0,0}},
     {{30,31,0,0,0,0,0,0},114,134,0,"CROSS",ScannerKind::Analog,{1,0,112,0,0,3,0,0}},
     {{0,0,32,33,0,0,0,0},114,136,0,"SQUARE",ScannerKind::Analog,{1,0,120,0,0,3,0,0}},
-    {{30,31,32,33,0,0,0,0},115,150,0,"ANALOGR",ScannerKind::Analog,{1,0,40,0,1,3,0,0}},
+    {{30,31,32,33,kPortTriggerGamepadLayout,0,0,0},115,150,0,"ANALOGR",ScannerKind::Analog,{1,0,40,0,1,3,0,0}},
     {{30,31,0,0,0,0,0,0},117,136,0,"SQUARE",ScannerKind::Analog,{1,0,120,0,0,2,0,0}},
     {{0,0,32,33,0,0,0,0},117,134,0,"CROSS",ScannerKind::Analog,{1,0,112,0,0,2,0,0}},
-    {{30,31,32,33,0,0,0,0},118,151,0,"ANALOGR",ScannerKind::Analog,{1,0,40,0,2,2,0,0}},
-    {{30,0,32,0,0,0,0,0},122,139,0,"R1",ScannerKind::Analog,{1,0,136,28,0,0,0,0}},
+    {{30,31,32,33,kPortTriggerGamepadLayout,0,0,0},118,151,0,"ANALOGR",ScannerKind::Analog,{1,0,40,0,2,2,0,0}},
+    {{30,0,32,0,kPortTriggerGamepadLayout,0,0,0},122,139,0,"R1",ScannerKind::Analog,{1,0,136,28,0,0,0,0}},
     {{0,31,0,33,0,0,0,0},122,137,0,"CIRCLE",ScannerKind::Analog,{1,0,104,0,0,0,0,0}},
-    {{30,31,32,33,0,0,0,0},112,148,0,"ANALOGL",ScannerKind::Analog,{1,0,48,0,0,1,0,0}},
+    {{30,31,32,33,kPortTriggerGamepadLayout,0,0,0},112,148,0,"ANALOGL",ScannerKind::Analog,{1,0,48,0,0,1,0,0}},
     {{30,31,32,33,0,0,0,0},123,141,0,"R2",ScannerKind::DigitalUpOrDown,{1,0,25,28,0,0,0,0}},
     {{30,31,32,33,0,0,0,0},124,140,0,"L2",ScannerKind::DigitalUpOrDown,{1,0,24,28,0,0,0,0}},
-    {{30,31,32,33,0,0,0,0},94,138,0,"L1",ScannerKind::DigitalUpOrDown,{1,0,26,28,0,0,0,0}},
-    {{30,31,32,33,0,0,0,0},93,135,0,"TRIANGLE",ScannerKind::DigitalDown,{0,0,28,0,0,0,0,0}},
+    {{30,31,32,33,kPortTriggerGamepadLayout,0,0,0},94,138,0,"L1",ScannerKind::DigitalUpOrDown,{1,0,26,28,0,0,0,0}},
+    {{30,31,32,33,kPortTriggerGamepadLayout,0,0,0},93,135,0,"TRIANGLE",ScannerKind::DigitalDown,{0,0,28,0,0,0,0,0}},
     {{30,31,32,33,0,0,0,0},95,140,135,"TRIANGLE + L2",ScannerKind::DigitalDown,{1,1,24,28,0,0,0,0}},
     {{30,31,32,33,0,0,0,0},96,141,135,"TRIANGLE + R2",ScannerKind::DigitalDown,{1,1,25,28,0,0,0,0}},
-    {{30,31,32,33,0,0,0,0},127,143,0,"R3",ScannerKind::DigitalDown,{1,0,18,0,0,0,0,0}},
+    {{30,31,32,33,kPortTriggerGamepadLayout,0,0,0},127,143,0,"R3",ScannerKind::DigitalDown,{1,0,18,0,0,0,0,0}},
     {{30,31,32,33,0,0,0,0},129,140,135,"TRIANGLE + L2",ScannerKind::DigitalDown,{1,1,24,28,0,0,0,0}},
     {{30,31,32,33,0,0,0,0},128,141,135,"TRIANGLE + R2",ScannerKind::DigitalDown,{1,1,25,28,0,0,0,0}},
-    {{30,0,32,0,0,0,0,0},126,137,0,"CIRCLE",ScannerKind::DigitalUpOrDown,{1,0,29,0,0,0,0,0}},
+    {{30,0,32,0,kPortTriggerGamepadLayout,0,0,0},126,137,0,"CIRCLE",ScannerKind::DigitalUpOrDown,{1,0,29,0,0,0,0,0}},
     {{0,31,0,33,0,0,0,0},126,139,0,"R1",ScannerKind::DigitalUpOrDown,{1,0,27,28,0,0,0,0}},
+    // Port-side Layout E. Use the direct pedal events for active-high trigger
+    // pressure so the original face-button throttle amplification is bypassed.
+    {{kPortTriggerGamepadLayout},113,141,0,"R2",ScannerKind::Analog,{0,0,152,0,0,3,0,0}},
+    {{kPortTriggerGamepadLayout},116,140,0,"L2",ScannerKind::Analog,{0,0,144,0,0,2,0,0}},
+    {{kPortTriggerGamepadLayout},123,134,0,"CROSS",ScannerKind::DigitalUpOrDown,{1,0,30,28,0,0,0,0}},
+    {{kPortTriggerGamepadLayout},124,136,0,"SQUARE",ScannerKind::DigitalUpOrDown,{1,0,31,28,0,0,0,0}},
+    {{kPortTriggerGamepadLayout},95,136,135,"TRIANGLE + SQUARE",ScannerKind::DigitalDown,{1,1,31,28,0,0,0,0}},
+    {{kPortTriggerGamepadLayout},96,134,135,"TRIANGLE + CROSS",ScannerKind::DigitalDown,{1,1,30,28,0,0,0,0}},
+    {{kPortTriggerGamepadLayout},129,136,135,"TRIANGLE + SQUARE",ScannerKind::DigitalDown,{1,1,31,28,0,0,0,0}},
+    {{kPortTriggerGamepadLayout},128,134,135,"TRIANGLE + CROSS",ScannerKind::DigitalDown,{1,1,30,28,0,0,0,0}},
     {{40,0,0,0,0,0,0,0},114,1,0,"I",ScannerKind::Analog,{1,0,40,0,0,3,0,0}},
     {{40,0,0,0,0,0,0,0},117,2,0,"II",ScannerKind::Analog,{1,0,48,0,2,2,0,0}},
     {{40,0,0,0,0,0,0,0},119,4,0,"B",ScannerKind::DigitalUpOrDown,{1,0,28,0,255,0,0,0}},
@@ -586,7 +597,7 @@ constexpr DeviceConfigurations deviceConfigurations[]{
     {65,{10,11,12,13,0,0,0,0,0,0},{0,0,0,0,0,0}},
     {83,{20,21,22,23,0,0,0,0,0,0},{4,20,12,20,12,20}},
     {115,{20,21,22,23,0,0,0,0,0,0},{4,20,12,20,12,20}},
-    {121,{30,31,32,33,0,0,0,0,0,0},{4,20,12,20,12,20}},
+    {121,{30,31,32,33,kPortTriggerGamepadLayout,0,0,0,0,0},{4,20,12,20,12,20}},
     {35,{40,0,0,0,0,0,0,0,0,0},{4,8,12,8,12,8}},
     {21,{50,0,0,0,0,0,0,0,0,0},{2,0,12,8,12,8}},
     {22,{51,0,0,0,0,0,0,0,0,0},{2,0,12,8,12,8}},

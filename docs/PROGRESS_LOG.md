@@ -1,3 +1,22 @@
+## 2026-11-18 TASK-0118 High-speed race timing
+
+The new command-line race probe compares committed steering, body state,
+wheel slip and contact impulses across display schedules and render
+stalls. BMW M5 and Murciélago matched at roughly 40 m/s across the tested
+schedules. The Murciélago also matched at 50 m/s and the M5 matched
+through authored slow motion. The bridge now stamps poses with the
+World loop index after the solo test exposed a stale presentation step.
+A matched original PS2 driving trace remains open.
+
+## 2026-11-18 TASK-0141 Analog trigger pedals
+
+Controller Layout E adds analog RT throttle and LT brake/reverse. The
+original picker saves the preset and Restore Defaults returns to Layout A.
+Windows Vulkan checks passed the picker and profile reload, a Layout E
+race with analog pedals and the relocated shift and camera controls, and
+the Layout A and C race regressions. TASK-0141 records the mapping evidence
+and the remaining verification gaps.
+
 ## 2026-11-17 TASK-0150 macOS Release package
 
 Built the Apple Silicon Release app at `out/mvp/macos-release/HP2.app`.

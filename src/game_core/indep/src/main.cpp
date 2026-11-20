@@ -1413,7 +1413,10 @@ bool ApplicationRuntime::TickInternal()
                             // presentation rate cannot consume its frames faster.
                             s.scheduledStepQuanta=static_cast<std::uint32_t>(gameTimeQuantizeElapsed(recordedElapsed));
                         }
-                        gameTimeSetWorldElapsed(&s.clock,worldElapsed);s.GenerateInput(replay);
+                        gameTimeSetWorldElapsed(&s.clock,worldElapsed);
+                        const bool liveWorld=!options.replaying && worldElapsed>0.0f;
+                        if(liveWorld)s.host.BeforeWorldStep(*simulation);
+                        s.GenerateInput(replay);
                         const auto stepResult=worldDoTimestep(simulation,worldElapsed);
                         if(stepResult!=WORLD_SIMULATION_OK) {
                             // Report actual owner results without replacing a failure
@@ -1507,6 +1510,7 @@ bool ApplicationRuntime::TickInternal()
                             if(s.demoReplay.active)s.demoReplay.RecordSessionEvent("demo.world_error",nullptr,detail.c_str());
                             throw std::runtime_error(detail);
                         }
+                        if(liveWorld)s.host.AfterWorldStep(*simulation);
                     }
                     replayManagerEndFrame(replay,&s.clock);
                 }
