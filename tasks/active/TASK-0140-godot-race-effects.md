@@ -4,6 +4,58 @@
 - Scope: expose original effects from the live MVP race and render them in Godot.
 - Dependencies: TASK-0124, TASK-0137 and TASK-0138.
 
+## 2026-11-20 Transparent glass and effect compositing
+
+The reported smoke/fog, flare and helicopter rocket flame cutouts came from
+the race car glass shader: it sampled the opaque screen copy and submitted
+`ALPHA = 1`, replacing earlier transparent draws at every glass pixel.
+Godot's [screen-reading documentation](https://docs.godotengine.org/en/stable/tutorials/shaders/screen-reading_shaders.html)
+confirms that the 3D screen copy excludes transparent objects.
+
+`car_paint.gdshaderinc` now returns the WINDOW base opacity before the independent
+specular/reflection alpha changes. It evaluates the existing byte-space glass
+color against the same opaque reference, subtracts the retained reference color,
+and submits the remainder with premultiplied alpha. Transmission is bounded by
+the darkest output/reference channel so byte-space darkening cannot require a
+negative linear contribution. This preserves the no-effect glass result while
+allowing prior transparent draws to survive. Fully opaque glass still replaces
+the destination. Authored priorities, depth testing, particles, frontend glass
+and game_core remain unchanged. This is a Godot presentation fix, with no new
+original-game equivalence claim.
+
+Validation on Godot 4.7.2, Intel Arc B390:
+
+```powershell
+cmake --build --preset godot-mvp-release --target stage_mvp --parallel 8
+cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 8
+$engine = "$PWD/local/tools/godot-4.7.2/Godot_v4.7.2-stable_win64_console.exe"
+foreach ($driver in @('vulkan', 'd3d12')) {
+    & $engine --path build/godot-mvp-release/mvp-project --rendering-driver $driver --resolution 320x240 --script "$PWD/tools/test_mvp_glass_effect_order.gd"
+}
+$env:HP2_PROFILE_DIR = "$PWD/local/glass-effect-drive-profile"
+& $engine --path build/godot-mvp-release/mvp-project --rendering-driver vulkan --resolution 960x720 --script "$PWD/tools/test_mvp_race_effects.gd" -- --race-track=12
+$env:HP2_PROFILE_DIR = "$PWD/local/glass-effect-debug-profile"
+$env:HP2_MVP_TEST_TRACK_EFFECTS = '1'
+& $engine --path build/godot-mvp-debug/mvp-project --rendering-driver vulkan --resolution 960x720 --script "$PWD/tools/test_mvp_particle_routes.gd" -- --race-track=12
+```
+
+Both builds and both backend regressions passed. The asset-independent pixel
+test exercises the production glass shader, four authored alpha values
+(0/16/64/128), and mix/additive effect quads before and after glass (16 cases).
+It checks unchanged no-effect glass color and reproduces the former effect
+erasure with the old opaque output. The live Release terrain check changed
+71,285 pixels when hiding XETT_ROAD_SK; the Debug authored Forest flame/smoke/
+spark fixture changed 37,512 samples across five particle definitions. The same
+route script also passed in Release with two visible definitions and 13,834
+changed samples after waiting for effects to enter view. All runs exited 0.
+`git diff --check` passed.
+
+Remaining limits: transmission around the opaque reference is a linear-renderer
+approximation to nonlinear GS byte blending over arbitrary transparent colors.
+This does not replace the existing authored priority or definition-level GPU
+particle sorting. Exact same-camera helicopter rocket/glass reproduction,
+intersecting transparency and original PS2 comparison remain unchecked.
+
 The active Windows donor implements the AcidFX emitter scheduler and the shared
 WorldEffects and FrameEffects pools in acidfxe.cpp. Wheel slip, surface emitters
 and car effects flow through car.cpp, care.cpp and terraineffects.cpp. Chopper

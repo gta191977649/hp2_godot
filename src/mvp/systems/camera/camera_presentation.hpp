@@ -29,6 +29,7 @@ private:
     godot::Vector2 motion_;
     godot::Vector3 lastOffset_;
     godot::Transform3D entryPose_, lastPose_;
+    godot::Basis framing_;
     float entryNear_{}, lastNear_{};
     float yaw_{}, pitch_{}, distance_{}, clearDistance_{}, returnYaw_{};
     std::chrono::steady_clock::time_point lastMotion_{};

@@ -63,6 +63,11 @@ func check(condition: bool, detail: String) -> bool:
 func body_center(body: MeshInstance3D) -> Vector3:
     return body.to_global(body.get_aabb().get_center())
 
+func camera_framing(camera: Camera3D, body: MeshInstance3D) -> Quaternion:
+    var arm := camera.global_position - body_center(body)
+    var orbit := Transform3D(Basis.IDENTITY, arm).looking_at(Vector3.ZERO, Vector3.UP)
+    return (orbit.basis.inverse() * camera.global_basis).get_rotation_quaternion()
+
 func run() -> void:
     var scene: Node3D = race.race_scene()
     var camera: Camera3D = scene.get_viewport().get_camera_3d()
@@ -91,7 +96,8 @@ func run() -> void:
     if input_only:
         await check_input_orbit(camera)
         return
-    move_mouse(Vector2(0, -1600))
+    var framing := camera_framing(camera, body)
+    move_mouse(Vector2(1, 0))
     await process_frame
     await process_frame
     var stock: Dictionary = race.telemetry()
@@ -99,6 +105,10 @@ func run() -> void:
         (-camera.global_basis.z).dot(stock.stock_camera_forward) > 0.985,
         "Orbit entry jumped away from the displayed HP2 camera"):
         return
+    if not check(camera_framing(camera, body).angle_to(framing) < 0.005,
+        "Mouse takeover changed the original camera framing"):
+        return
+    move_mouse(Vector2(0, -1600))
     var entry_end := Time.get_ticks_msec() + 300
     while Time.get_ticks_msec() < entry_end:
         await process_frame
@@ -108,11 +118,10 @@ func run() -> void:
     await process_frame
     var close := camera.global_position - body_center(body)
     var local_eye := body.to_local(camera.global_position)
-    var direction_to_eye := close.normalized()
     if not check(close.y < -0.05 and close.length() < open_radius * 0.85 and
         local_eye.x < body.get_aabb().get_center().x and not body.get_aabb().has_point(local_eye) and
-        camera.global_basis.z.dot(direction_to_eye) > 0.99999,
-        "Low rear orbit must retract toward the bumper and aim at the body center (radius=%s, arm=%s, local=%s)" %
+        camera_framing(camera, body).angle_to(framing) < 0.005,
+        "Low rear orbit must retract toward the bumper and preserve framing (radius=%s, arm=%s, local=%s)" %
         [open_radius, close, local_eye]):
         return
     move_mouse(Vector2(0, -1600))
@@ -137,16 +146,16 @@ func run() -> void:
     await process_frame
     await process_frame
     var high := (camera.global_position - body_center(body)).normalized()
-    if not check(high.y > 0.995 and (-camera.global_basis.z).dot(-high) > 0.99999,
-        "Mouse up must orbit overhead and aim at the car body center (arm=%s, aim=%s)" %
+    if not check(high.y > 0.995 and camera_framing(camera, body).angle_to(framing) < 0.005,
+        "Mouse up must orbit overhead and preserve framing (arm=%s, aim=%s)" %
         [high, (-camera.global_basis.z).dot(-high)]):
         return
     move_mouse(Vector2(0, 230))
     await process_frame
     await process_frame
     var lower := (camera.global_position - body_center(body)).normalized()
-    if not check(lower.y < high.y - 0.05 and (-camera.global_basis.z).dot(-lower) > 0.99999,
-        "Mouse down must lower the camera and keep aiming at the car body center"):
+    if not check(lower.y < high.y - 0.05 and camera_framing(camera, body).angle_to(framing) < 0.005,
+        "Mouse down must lower the camera and preserve framing"):
         return
     if not check(race.telemetry().orbit_active and race.telemetry().orbit_terrain_queries > 0,
         "Camera did not apply mouse input and terrain constraints"):
@@ -156,7 +165,21 @@ func run() -> void:
         await process_frame
     if not check(race.telemetry().orbit_active, "Camera returned before the blend finished"):
         return
+    var interrupted_pose := camera.global_transform
+    move_mouse(Vector2(1, 0))
+    await process_frame
+    await process_frame
+    if not check(camera.global_position.distance_to(interrupted_pose.origin) < 0.25 and
+        camera.global_basis.get_rotation_quaternion().angle_to(interrupted_pose.basis.get_rotation_quaternion()) < 0.04,
+        "Interrupting return jumped away from the displayed camera"):
+        return
+    var resumed_framing := camera_framing(camera, body)
     move_mouse(Vector2(32, 0))
+    await process_frame
+    await process_frame
+    if not check(camera_framing(camera, body).angle_to(resumed_framing) < 0.005,
+        "Resumed orbit refocused the camera"):
+        return
     await create_timer(0.7).timeout
     if not check(race.telemetry().orbit_active, "Mouse failed to interrupt the blend"):
         return

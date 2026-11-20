@@ -35,8 +35,10 @@ schedule and remap samples to render the six race reflection faces and the
 reflection atlas. The six reflection cameras share a dedicated Godot world.
 Its static scenery uses the authored visibility zones and projected-size LODs.
 Only due faces render, reusing the other images in the atlas. Frontend previews
-sample the original CarSelectEnvMap. Sorted vehicle windows blend against the
-opaque scene color, then apply the authored reflection with Godot depth testing.
+sample the original CarSelectEnvMap. Sorted vehicle windows evaluate the authored
+blend and reflection against the opaque scene color, then submit a premultiplied
+contribution with Godot depth testing. The framebuffer retains earlier
+transparent effects through the glass.
 The primary race camera selects static scenery by authored visibility zone
 and projected-size LOD. Godot copies the decoded section tree at scene
 creation and tests conservative bounds against the primary camera frustum.

@@ -267,7 +267,47 @@ release on pause. `git -c core.safecrlf=false diff --check` passed. A moving
 car along tunnel walls and a side-by-side comparison with GTA SA were
 outside the automated coverage.
 
-### Vertical orbit and vehicle center
+### 2026-11-20 Mouse orbit framing and seamless restoration
+
+User requests GTA SA-like mouse rotation without refocusing the camera on
+the vehicle center. The presentation camera now retains the source view's
+rotation relative to its orbit arm, including roll. Mouse movement rotates
+this framing with the arm rather than replacing it with a look-at-center
+orientation. Exterior takeover applies input immediately and preserves the
+displayed radius, including when interrupting automatic return. Interior
+takeover retains its existing exterior transition and collision checks.
+Restoration keeps the 1.5-second idle delay and 0.6-second duration, with
+smoothstep easing at both ends instead of the former linear blend.
+
+Reference rechecked locally: `D:/dev/gta-reversed` commit
+`04c5b6643a9059e879f6015ec02e618f141fb27a`,
+`source/game_sa/Cam.cpp`, `CCam::Process_FollowCar_SA` (0x5245B0).
+Its body is still `NOTSA_UNREACHABLE()`. This change is explicitly a host
+presentation policy, not recovered HP2 behavior or verified GTA equivalence.
+No game_core changes or new bridge interfaces.
+
+Validation (Godot 4.7.2, 1280x720):
+
+- `cmake --build --preset godot-mvp-debug --target stage_mvp --parallel 12`: PASS.
+- `cmake --build --preset godot-mvp-release --target stage_mvp --parallel 12`: PASS.
+- Full `tools/test_mvp_orbit_camera.gd`, Debug Track 13, Vulkan and D3D12:
+  PASS (`ORBIT_CAMERA_PASS track=13 quadrants=4`). Checks source framing
+  on entry, low/high views, four quadrants, interrupted return continuity,
+  resumed framing, exact source restoration, view switch and pause cleanup.
+- Full Debug Track 33 D3D12 smoke: FAIL at the low rear retraction check
+  (camera retained the prior overhead safe arm). Terrain constraints were
+  not changed; whether this fixture failure predates the change remains
+  unverified. Moving-wall collision and a live GTA comparison remain open.
+- Release Track 33 D3D12 input-only smoke: PASS
+  (`MOUSE_ORBIT_INPUT_PASS`, `ORBIT_CAMERA_PASS track=33 input_only=true`).
+- `git -c core.safecrlf=false diff --check` and
+  `py -3 reverse/scripts/generate_progress.py --check`: PASS.
+
+Reproduction uses the commands above with the Debug or Release staged
+project. `HP2_MVP_TEST_ORBIT_INPUT=1` selects the shorter input/lifecycle
+smoke. Fresh `HP2_PROFILE_DIR` values isolate every run.
+
+### Vertical orbit and vehicle center (historical policy, superseded above)
 
 GTA's controller defaults use non-inverted mouse Y and a 0.0025 mouse
 sensitivity. The SA camera adaptation applies positive vertical input to the

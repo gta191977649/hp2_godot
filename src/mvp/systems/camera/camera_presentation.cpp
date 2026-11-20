@@ -35,6 +35,12 @@ constexpr float minimumNear = 0.05f;
 constexpr float bodyClearance = 0.18f;
 const Vector3 up(0, 1, 0);
 
+Basis arm_basis(const Vector3& arm) {
+    const auto direction = arm.normalized();
+    const auto viewUp = std::abs(direction.dot(up)) < 0.9999f ? up : Vector3(0, 0, 1);
+    return Transform3D(Basis(), arm).looking_at(Vector3(), viewUp).basis;
+}
+
 void native_point(const Vector3& p, float (&out)[4]) {
     out[0] = p.x;
     out[1] = -p.z;
@@ -129,9 +135,16 @@ bool RaceOrbitCamera::apply(Camera3D& camera, const VehicleEntityState& player,
             yaw_ = exterior ? std::atan2(seed.x, seed.z) : heading + Math_PI;
             pitch_ = exterior ? std::clamp(static_cast<float>(std::atan2(seed.y,
                 std::hypot(seed.x, seed.z))), minPitch, maxPitch) : defaultPitch;
-            if (!resume)
-                distance_ = exterior ? std::clamp(static_cast<float>(seed.length()), minimumDistance, 9.0f) : defaultDistance;
+            distance_ = exterior ? static_cast<float>(seed.length()) : defaultDistance;
             clearDistance_ = exterior ? seed.length() : 0.0f;
+            // Retain the displayed framing (including roll) instead of aiming
+            // at the body center on takeover. Rebase from the actual displayed
+            // pose when mouse input interrupts the automatic return.
+            framing_ = exterior ? arm_basis(seed).inverse() *
+                (resume ? lastPose_.basis : base.basis) : Basis();
+            // Exterior takeover already shares the current pose. Apply mouse
+            // input immediately; only an interior-to-exterior move needs entry.
+            if (exterior) entryStarted_ = now - std::chrono::seconds(1);
         }
         active_ = true;
         returning_ = false;
@@ -146,11 +159,14 @@ bool RaceOrbitCamera::apply(Camera3D& camera, const VehicleEntityState& player,
     }
 
     const auto idle = std::chrono::duration<double>(now - lastMotion_).count();
-    const float weight = std::clamp(static_cast<float>((idle - idleDelay) / returnDuration), 0.0f, 1.0f);
-    if (weight >= 1.0f) {
+    const float returnTime = std::clamp(static_cast<float>((idle - idleDelay) / returnDuration), 0.0f, 1.0f);
+    if (returnTime >= 1.0f) {
         reset();
         return false;
     }
+    // Zero angular velocity at both ends avoids a jerk when idle restoration
+    // begins and when control hands back to the moving source camera.
+    const float weight = returnTime * returnTime * (3.0f - 2.0f * returnTime);
     const bool wasReturning = returning_;
     returning_ = weight > 0;
     const Vector3 direction(std::sin(yaw_) * std::cos(pitch_), std::sin(pitch_),
@@ -260,10 +276,8 @@ bool RaceOrbitCamera::apply(Camera3D& camera, const VehicleEntityState& player,
 
     const auto orbitOffset = candidate - center;
     const float bodyGap = orbitOffset.length() - bodyExit(orbitOffset.normalized());
-    const Vector3 viewUp = std::abs(orbitOffset.normalized().dot(up)) < 0.9999f ? up :
-        Vector3(std::sin(yaw_), 0.0f, std::cos(yaw_));
-    const auto orbit = Transform3D(Basis(), candidate).looking_at(center, viewUp);
-    const auto basis = orbit.basis.get_rotation_quaternion().slerp(base.basis.get_rotation_quaternion(), weight);
+    const auto orbitBasis = arm_basis(orbitOffset) * framing_;
+    const auto basis = orbitBasis.get_rotation_quaternion().slerp(base.basis.get_rotation_quaternion(), weight);
     // Preserve the nearby body and keep the near plane clear of the road.
     const float closeNear = std::max(minimumNear, std::min(bodyGap * 0.75f,
         (candidate.y - candidateGround) / std::max(1.0f, projectionRadius)));

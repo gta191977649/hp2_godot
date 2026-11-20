@@ -154,11 +154,12 @@ vec3 frontend_highlights(vec4 rgba, vec2 uv, float lod, float destination_alpha)
     return highlights;
 }
 
-vec3 race_paint(vec4 base, vec2 uv, vec3 behind) {
+vec3 race_paint(vec4 base, vec2 uv, vec3 behind, out float opacity) {
     vec2 half_texel = 0.5 / vec2(textureSize(base_image, 0));
     uv = mix(clamp(uv, half_texel, 1.0 - half_texel), uv, notEqual(repeat_axes, ivec2(0)));
     vec4 texel = texture(base_image, uv);
     float destination_alpha = min(255.0, floor(texel.a * 255.0 * base.a / 128.0));
+    opacity = min(destination_alpha / 128.0, 1.0);
     if (alpha_test && destination_alpha <= 48.0) discard;
     vec3 paint = clamp(floor(texel.rgb * 255.0 * base.rgb / 128.0), 0.0, 255.0);
 #ifdef CAR_GLASS
@@ -210,12 +211,24 @@ void fragment() {
     } else {
         vec3 behind = vec3(0.0);
 #ifdef CAR_GLASS
-        behind = gs_byte_rgb(texture(opaque_scene, SCREEN_UV).rgb, OUTPUT_IS_SRGB);
+        vec3 backdrop = texture(opaque_scene, SCREEN_UV).rgb;
+        behind = gs_byte_rgb(backdrop, OUTPUT_IS_SRGB);
 #endif
-        vec3 encoded = race_paint(base, UV, behind);
+        float opacity;
+        vec3 encoded = race_paint(base, UV, behind, opacity);
         ALBEDO = OUTPUT_IS_SRGB ? encoded : gs_encoded_to_linear(encoded);
 #ifdef CAR_GLASS
-        ALPHA = 1.0; // The shader has already composited against the opaque scene.
+        // The screen copy contains opaque geometry only. Keep the authored
+        // byte-space result over that reference, but let the blend unit retain
+        // earlier transparent draws (smoke, flames, flares and other windows).
+        // An opaque output would replace all of them with the screen copy.
+        // Byte-space darkening can be stronger than linear alpha blending.
+        // Increase coverage just enough to keep the premultiplied contribution
+        // nonnegative while reproducing the original no-particle glass color.
+        vec3 retained = clamp(ALBEDO / max(backdrop, vec3(1e-6)), vec3(0.0), vec3(1.0));
+        float transmission = min(1.0 - opacity, min(retained.r, min(retained.g, retained.b)));
+        ALBEDO = max(ALBEDO - backdrop * transmission, vec3(0.0));
+        ALPHA = 1.0 - transmission;
 #endif
     }
 }

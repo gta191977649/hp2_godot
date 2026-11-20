@@ -326,6 +326,7 @@ saves/
 !/tools/test_mvp_hud_interpolation.gd
 !/tools/test_mvp_presentation_previews.gd
 !/tools/test_mvp_race_shaders.gd
+!/tools/test_mvp_glass_effect_order.gd
 !/tools/championship_performance.py
 
 !/tasks/active/TASK-0123-native-source-migration.md
@@ -354,3 +355,6 @@ saves/
 !/tools/test_mvp_frontend_resize.gd
 !/tools/test_frontend_mvp.gd
 !/tools/mvp_test_route_driver.gd
+!/tools/test_mvp_second_controller.gd
+!/tools/test_mvp_second_controller.py
+!/tasks/completed/TASK-0151-split-screen-investigation.md
